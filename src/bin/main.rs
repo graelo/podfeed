@@ -1,0 +1,40 @@
+use std::path::Path;
+
+use clap::{CommandFactory, Parser};
+use clap_complete::generate;
+
+use podsync::{
+    config::{self, Config},
+    Result,
+};
+
+fn main() -> Result<()> {
+    let config = Config::parse();
+
+    match config.command {
+        config::Command::Generate { data_dir, base_url } => {
+            let base_url = Path::new(&base_url);
+            async_std::task::block_on(run(&data_dir, base_url))?;
+        }
+        config::Command::GenerateCompletion { shell } => {
+            let mut app = Config::command();
+            let name = app.get_name().to_string();
+            generate(shell, &mut app, name, &mut std::io::stdout());
+        }
+    }
+
+    Ok(())
+}
+
+async fn run(data_dir: &Path, base_url: &Path) -> Result<()> {
+    let directories = podsync::convert::available_directories(data_dir).await?;
+
+    for dirpath in &directories {
+        let rss_content = podsync::convert::process(data_dir, dirpath, base_url).await?;
+        let rss_filepath = dirpath.with_extension("xml");
+        async_std::fs::write(rss_filepath, rss_content).await?;
+        // let rss_filepath = data_dir.with_file_name()
+        // println!("{}", rendered_rss);
+    }
+    Ok(())
+}
