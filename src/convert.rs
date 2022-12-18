@@ -91,16 +91,12 @@ pub fn convert_channel<P: AsRef<Path>>(
 
 /// Parse channel & episodes, and return the rendered xml.
 pub async fn process<P: AsRef<Path>>(base_dir: P, dirpath: P, base_url: P) -> Result<String> {
-    // let dirpath = std::path::Path::new(base_dir);
-
     let episode_infofiles = info::episode::available_episodes(dirpath.as_ref()).await?;
 
     let mut episodes: Vec<rss::episode::Episode> = vec![];
     for episode_infofile in episode_infofiles {
         let (episode_info, episode_enclosure, episode_image_filepath) =
             episode_infofile.parse().await?;
-        // println!("episode: {:?}", episode_info);
-        // println!("enclosure: {:?}", episode_enclosure);
 
         let rss_episode = convert_episode(
             base_dir.as_ref(),
@@ -110,7 +106,6 @@ pub async fn process<P: AsRef<Path>>(base_dir: P, dirpath: P, base_url: P) -> Re
             &episode_image_filepath,
         )?;
         episodes.push(rss_episode);
-        // println!("rss_episode: {}", rss_episode.to_string()?);
     }
 
     let channel_infofile = info::channel::available_channel(&dirpath).await?;
@@ -143,6 +138,9 @@ pub async fn available_directories<P: AsRef<Path>>(data_dirpath: P) -> Result<Ve
     while let Some(entry) = entries.next().await {
         let entry = entry?;
         let path = entry.path();
+        if path.file_name().unwrap() == "Cache" {
+            continue;
+        }
         if path.is_dir().await {
             directories.push(path.into());
         }

@@ -40,7 +40,8 @@ impl InfoFile {
 pub async fn available_channel<P: AsRef<Path>>(dirpath: P) -> Result<InfoFile> {
     let mut files: Vec<InfoFile> = vec![];
 
-    let pattern = r#"[^-]+--(.{34})--.*\.info\.json"#;
+    let pattern = r#"NA--([a-zA-Z0-9-_]{34})--.*\.info\.json"#;
+    // let pattern = r#"[^-]+--([a-zA-Z0-9-_]{34})--.*\.info\.json"#;
     let matcher = Regex::new(pattern).unwrap();
 
     let mut entries = fs::read_dir(dirpath.as_ref()).await?;

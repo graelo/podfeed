@@ -26,12 +26,13 @@ impl InfoFile {
         let content = async_std::fs::read_to_string(&self.filepath).await?;
         let ep_info: Info = serde_json::from_str(&content)?;
 
-        let video_filepath = self
+        let video_filepath: async_std::path::PathBuf = self
             .filepath
-            .to_str()
-            .and_then(|s| s.strip_suffix(".info.json"))
-            .map(|s| async_std::path::Path::new(s).with_extension("mp4"))
-            .expect("cannot infer the video file from the info.json file");
+            // remove ".json"
+            .with_extension("")
+            // replace ".info" with ".mp4"
+            .with_extension("mp4")
+            .into();
 
         let video_filelength = video_filepath.metadata().await?.len();
 
