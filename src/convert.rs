@@ -1,9 +1,13 @@
 //! Convert from info files to rss.
 
-use async_std::stream::StreamExt;
 use std::path::{Path, PathBuf};
 
+use async_std::stream::StreamExt;
 use hard_xml::XmlWrite;
+use photon_rs::{
+    native::{open_image, save_image},
+    transform::resize,
+};
 
 use crate::{info, rss, Result};
 
@@ -86,6 +90,8 @@ pub fn convert_channel<P: AsRef<Path>>(
     image_filepath: P,
     episodes: Vec<rss::episode::Episode>,
 ) -> Result<rss::channel::Channel> {
+    resize_image_to_fill(image_filepath.as_ref(), 1400)?;
+
     let channel = rss::channel::Channel {
         title: source.title.clone(),
         description: source.description.clone(),
@@ -122,6 +128,8 @@ pub fn convert_episode<P: AsRef<Path>>(
     enclosure: &info::episode::Enclosure,
     image_filepath: P,
 ) -> Result<rss::episode::Episode> {
+    resize_image_to_fill(image_filepath.as_ref(), 1400)?;
+
     let target = rss::episode::Episode {
         guid: source.guid.clone(),
         pub_date: format!("{}", &source.pub_date().format("%a, %d %b %Y %H:%M:%S %z")),
@@ -150,4 +158,27 @@ pub fn convert_episode<P: AsRef<Path>>(
     };
 
     Ok(target)
+}
+
+fn resize_image_to_fill<P: AsRef<Path>>(image_filepath: P, target_size: u32) -> Result<()> {
+    let img = open_image(&image_filepath.as_ref().to_string_lossy())?;
+    let (a, b) = (img.get_width(), img.get_height());
+    let t = target_size;
+    if a != t && b != t {
+        let (na, nb) = if a > b {
+            (t * a / b, t)
+        } else {
+            (t, t * b / a)
+        };
+
+        let new_img = resize(
+            &img,
+            na,
+            nb,
+            photon_rs::transform::SamplingFilter::CatmullRom,
+        );
+        save_image(new_img, &image_filepath.as_ref().to_string_lossy());
+    }
+
+    Ok(())
 }

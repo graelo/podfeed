@@ -28,7 +28,7 @@ impl InfoFile {
             .filepath
             .to_str()
             .and_then(|s| s.strip_suffix(".info.json"))
-            .map(|s| Path::new(s).with_extension("png"))
+            .map(|s| Path::new(s).with_extension("jpg"))
             .expect("cannot infer the image file from the info.json file");
 
         Ok((ch_info, image_filepath))
