@@ -82,10 +82,10 @@ jobs:
       #     cargo install --locked cargo-udeps || true
       #     cargo udeps
 
-      - name: Quality - cargo pants
-        run: |
-          cargo install --locked cargo-pants || true
-          cargo pants
+      # - name: Quality - cargo pants
+      #   run: |
+      #     cargo install --locked cargo-pants || true
+      #     cargo pants
 
       - name: Build (dev)
         run: cargo build --all-features
