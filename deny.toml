@@ -48,7 +48,11 @@ notice = "warn"
 # A list of advisory IDs to ignore. Note that ignored advisories will still
 # output a note when they are encountered.
 ignore = [
+    "RUSTSEC-2020-0023",
     "RUSTSEC-2020-0071", # time-rs, but not used by chrono, see https://github.com/chronotope/chrono/issues/602
+    "RUSTSEC-2020-0056", # stdweb is unmaintained, but we don't use wasm at all
+    "RUSTSEC-2020-0147", # rustlinalg is unmaintained
+    "RUSTSEC-2021-0140", # rusttype is actually maintained
 ]
 # Threshold for security vulnerabilities, any vulnerability with a CVSS score
 # lower than the range specified will be ignored. Note that ignored advisories
@@ -80,6 +84,7 @@ allow = [
     "Apache-2.0",
     "BSD-3-Clause",
     "Unicode-DFS-2016",
+    "Zlib",
     #"Apache-2.0 WITH LLVM-exception",
 ]
 # List of explicitly disallowed licenses
