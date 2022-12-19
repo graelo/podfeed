@@ -1,48 +1,33 @@
 //! Convert from info files to rss.
 
-use async_std::stream::StreamExt;
 use std::path::{Path, PathBuf};
 
+use async_std::stream::StreamExt;
 use hard_xml::XmlWrite;
+use photon_rs::{
+    native::{open_image, save_image},
+    transform::resize,
+};
 
 use crate::{info, rss, Result};
 
-/// Convert episode Info to a RSS Episode.
-pub fn convert_episode<P: AsRef<Path>>(
-    base_dir: P,
-    base_url: P,
-    source: &info::episode::Info,
-    enclosure: &info::episode::Enclosure,
-    image_filepath: P,
-) -> Result<rss::episode::Episode> {
-    let target = rss::episode::Episode {
-        guid: source.guid.clone(),
-        pub_date: format!("{}", &source.pub_date().format("%a, %d %b %Y %H:%M:%S")),
-        title: source.title.clone(),
-        link: source.link.clone(),
-        description: source.description.clone(),
-        enclosure: rss::episode::Enclosure {
-            file_url: replace_base(
-                base_dir.as_ref(),
-                base_url.as_ref(),
-                enclosure.video_filepath.as_ref(),
-            ),
-            file_length: enclosure.video_filelength.to_string(),
-            file_type: enclosure.video_filetype.clone(),
-        },
-        author: source.author.clone(),
-        image: rss::episode::Image {
-            file_url: replace_base(
-                base_dir.as_ref(),
-                base_url.as_ref(),
-                image_filepath.as_ref(),
-            ),
-        },
-        duration: source.duration_seconds.to_string(),
-        explicit_content: "false".into(),
-    };
+/// List all playlist directories.
+pub async fn available_directories<P: AsRef<Path>>(data_dirpath: P) -> Result<Vec<PathBuf>> {
+    let mut directories: Vec<PathBuf> = vec![];
 
-    Ok(target)
+    let mut entries = async_std::fs::read_dir(data_dirpath.as_ref()).await?;
+    while let Some(entry) = entries.next().await {
+        let entry = entry?;
+        let path = entry.path();
+        if path.file_name().unwrap() == "Cache" {
+            continue;
+        }
+        if path.is_dir().await {
+            directories.push(path.into());
+        }
+    }
+
+    Ok(directories)
 }
 
 /// Replace the parent base directory with the serving base url.
@@ -54,39 +39,6 @@ fn replace_base<P: AsRef<Path>>(base_dir: P, base_url: P, filepath: P) -> String
         .unwrap()
         .to_string_lossy()
         .to_string()
-}
-
-/// Convert channel Info into a RSS Channel.
-pub fn convert_channel<P: AsRef<Path>>(
-    base_dir: P,
-    base_url: P,
-    source: &info::channel::Info,
-    image_filepath: P,
-    episodes: Vec<rss::episode::Episode>,
-) -> Result<rss::channel::Channel> {
-    let channel = rss::channel::Channel {
-        title: source.title.clone(),
-        description: source.description.clone(),
-        link: source.link.clone(),
-        image: rss::channel::Image {
-            image_url: replace_base(
-                base_dir.as_ref(),
-                base_url.as_ref(),
-                image_filepath.as_ref(),
-            ),
-        },
-        author: source.author.clone(),
-        language: source.language().to_string(),
-        last_build_date: source.last_build_date(),
-        pub_date: source.pub_date().to_string(),
-        category: source.category().to_string(),
-        generator: source.generator().to_string(),
-        explicit_content: source.explicit_content().to_string(),
-        channel_type: source.channel_type().to_string(),
-        episodes,
-    };
-
-    Ok(channel)
 }
 
 /// Parse channel & episodes, and return the rendered xml.
@@ -130,21 +82,103 @@ pub async fn process<P: AsRef<Path>>(base_dir: P, dirpath: P, base_url: P) -> Re
     Ok(rendered_rss)
 }
 
-/// List all playlist directories.
-pub async fn available_directories<P: AsRef<Path>>(data_dirpath: P) -> Result<Vec<PathBuf>> {
-    let mut directories: Vec<PathBuf> = vec![];
+/// Convert channel Info into a RSS Channel.
+pub fn convert_channel<P: AsRef<Path>>(
+    base_dir: P,
+    base_url: P,
+    source: &info::channel::Info,
+    image_filepath: P,
+    episodes: Vec<rss::episode::Episode>,
+) -> Result<rss::channel::Channel> {
+    resize_image_to_fill(image_filepath.as_ref(), 1400)?;
 
-    let mut entries = async_std::fs::read_dir(data_dirpath.as_ref()).await?;
-    while let Some(entry) = entries.next().await {
-        let entry = entry?;
-        let path = entry.path();
-        if path.file_name().unwrap() == "Cache" {
-            continue;
-        }
-        if path.is_dir().await {
-            directories.push(path.into());
-        }
+    let channel = rss::channel::Channel {
+        title: source.title.clone(),
+        description: source.description.clone(),
+        link: source.link.clone(),
+        image: rss::channel::Image {
+            image_url: replace_base(
+                base_dir.as_ref(),
+                base_url.as_ref(),
+                image_filepath.as_ref(),
+            ),
+        },
+        author: source.author.clone(),
+        language: source.language().to_string(),
+        last_build_date: format!(
+            "{}",
+            source.last_build_date().format("%a, %d %b %Y %H:%M:%S %z")
+        ),
+        pub_date: format!("{}", source.pub_date().format("%a, %d %b %Y %H:%M:%S %z")),
+        category: source.category().to_string(),
+        generator: source.generator().to_string(),
+        explicit_content: source.explicit_content().to_string(),
+        channel_type: source.channel_type().to_string(),
+        episodes,
+    };
+
+    Ok(channel)
+}
+
+/// Convert episode Info to a RSS Episode.
+pub fn convert_episode<P: AsRef<Path>>(
+    base_dir: P,
+    base_url: P,
+    source: &info::episode::Info,
+    enclosure: &info::episode::Enclosure,
+    image_filepath: P,
+) -> Result<rss::episode::Episode> {
+    resize_image_to_fill(image_filepath.as_ref(), 1400)?;
+
+    let target = rss::episode::Episode {
+        guid: source.guid.clone(),
+        pub_date: format!("{}", &source.pub_date().format("%a, %d %b %Y %H:%M:%S %z")),
+        title: source.title.clone(),
+        link: source.link.clone(),
+        description: source.description.clone(),
+        enclosure: rss::episode::Enclosure {
+            file_url: replace_base(
+                base_dir.as_ref(),
+                base_url.as_ref(),
+                enclosure.video_filepath.as_ref(),
+            ),
+            file_length: enclosure.video_filelength.to_string(),
+            file_type: enclosure.video_filetype.clone(),
+        },
+        author: source.author.clone(),
+        image: rss::episode::Image {
+            file_url: replace_base(
+                base_dir.as_ref(),
+                base_url.as_ref(),
+                image_filepath.as_ref(),
+            ),
+        },
+        duration: source.duration_seconds.to_string(),
+        explicit_content: "false".into(),
+    };
+
+    Ok(target)
+}
+
+fn resize_image_to_fill<P: AsRef<Path>>(image_filepath: P, target_size: u32) -> Result<()> {
+    let img = open_image(&image_filepath.as_ref().to_string_lossy())?;
+    let (a, b) = (img.get_width(), img.get_height());
+    let t = target_size;
+    if a != t && b != t {
+        let (na, nb) = if a > b {
+            (t * a / b, t)
+        } else {
+            (t, t * b / a)
+        };
+
+        let new_img = resize(
+            &img,
+            na,
+            nb,
+            photon_rs::transform::SamplingFilter::CatmullRom,
+        );
+        save_image(new_img, &image_filepath.as_ref().to_string_lossy());
     }
 
-    Ok(directories)
+    Ok(())
 }

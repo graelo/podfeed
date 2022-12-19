@@ -3,7 +3,7 @@
 use std::path::{Path, PathBuf};
 
 use async_std::{fs, stream::StreamExt};
-use chrono::{Local, NaiveDate, NaiveDateTime};
+use chrono::{offset::Utc, DateTime, Local, NaiveDate};
 use regex::Regex;
 use serde::Deserialize;
 
@@ -28,7 +28,7 @@ impl InfoFile {
             .filepath
             .to_str()
             .and_then(|s| s.strip_suffix(".info.json"))
-            .map(|s| Path::new(s).with_extension("png"))
+            .map(|s| Path::new(s).with_extension("jpg"))
             .expect("cannot infer the image file from the info.json file");
 
         Ok((ch_info, image_filepath))
@@ -91,11 +91,12 @@ pub struct Info {
 }
 
 impl Info {
-    pub(crate) fn pub_date(&self) -> NaiveDateTime {
-        NaiveDate::parse_from_str(&self.upload_date, "%Y%m%d")
+    pub(crate) fn pub_date(&self) -> DateTime<Utc> {
+        let naived_date = NaiveDate::parse_from_str(&self.upload_date, "%Y%m%d")
             .unwrap()
             .and_hms_opt(9, 10, 11)
-            .unwrap()
+            .unwrap();
+        DateTime::<Utc>::from_utc(naived_date, Utc)
     }
 
     pub(crate) fn language(&self) -> &'static str {
@@ -106,8 +107,8 @@ impl Info {
         "Technology & Science"
     }
 
-    pub(crate) fn last_build_date(&self) -> String {
-        format!("{}", Local::now().format("%a, %d %b %Y %H:%M:%S"))
+    pub(crate) fn last_build_date(&self) -> DateTime<Local> {
+        Local::now()
     }
 
     pub(crate) fn generator(&self) -> &'static str {

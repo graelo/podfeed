@@ -28,6 +28,14 @@ pub enum Error {
     #[error("unexpected configuration: `{0}`")]
     ConfigError(String),
 
+    /// Image conversion error.
+    #[error("image conversion error: `{source}`")]
+    Image {
+        #[from]
+        /// Source error.
+        source: photon_rs::native::OpenError,
+    },
+
     /// Serde JSON error.
     #[error("serde json error: `{source}`")]
     Json {

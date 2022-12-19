@@ -3,7 +3,7 @@
 use std::path::{Path, PathBuf};
 
 use async_std::{fs, stream::StreamExt};
-use chrono::{NaiveDate, NaiveDateTime};
+use chrono::{offset::Utc, DateTime, NaiveDate};
 use regex::Regex;
 use serde::Deserialize;
 
@@ -113,11 +113,12 @@ pub struct Info {
 }
 
 impl Info {
-    pub(crate) fn pub_date(&self) -> NaiveDateTime {
-        NaiveDate::parse_from_str(&self.upload_date, "%Y%m%d")
+    pub(crate) fn pub_date(&self) -> DateTime<Utc> {
+        let naived_date = NaiveDate::parse_from_str(&self.upload_date, "%Y%m%d")
             .unwrap()
             .and_hms_opt(9, 10, 11)
-            .unwrap()
+            .unwrap();
+        DateTime::<Utc>::from_utc(naived_date, Utc)
     }
 }
 
