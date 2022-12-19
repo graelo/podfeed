@@ -38,10 +38,10 @@ impl InfoFile {
 
         let image_filepath = self
             .filepath
-            .to_str()
-            .and_then(|s| s.strip_suffix(".info.json"))
-            .map(|s| Path::new(s).with_extension("png"))
-            .expect("cannot infer the image file from the info.json file");
+            // remove ".json"
+            .with_extension("")
+            // replace ".info" with ".mp4"
+            .with_extension("png");
 
         let enclosure = Enclosure {
             video_filepath: video_filepath.into(),
