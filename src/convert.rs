@@ -44,6 +44,11 @@ fn replace_base<P: AsRef<Path>>(base_dir: P, base_url: P, filepath: P) -> String
 /// Parse channel & episodes, and return the rendered xml.
 pub async fn process<P: AsRef<Path>>(base_dir: P, dirpath: P, base_url: P) -> Result<String> {
     let episode_infofiles = info::episode::available_episodes(dirpath.as_ref()).await?;
+    println!(
+        "- {} ({} episodes)",
+        dirpath.as_ref().to_string_lossy(),
+        episode_infofiles.len()
+    );
 
     let mut episodes: Vec<rss::episode::Episode> = vec![];
     for episode_infofile in episode_infofiles {
