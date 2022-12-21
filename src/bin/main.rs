@@ -31,7 +31,6 @@ async fn run(data_dir: &Path, base_url: &Path) -> Result<()> {
     let directories = podsync::convert::available_directories(data_dir).await?;
 
     for dirpath in &directories {
-        println!("- {}", dirpath.to_string_lossy());
         let rss_content = podsync::convert::process(data_dir, dirpath, base_url).await?;
         let rss_filepath = append_ext("xml", dirpath);
         async_std::fs::write(rss_filepath, rss_content).await?;

@@ -6,7 +6,8 @@ use async_std::stream::StreamExt;
 use hard_xml::XmlWrite;
 use photon_rs::{
     native::{open_image, save_image},
-    transform::resize,
+    transform::{padding_bottom, padding_left, padding_right, padding_top, resize},
+    Rgba,
 };
 
 use crate::{info, rss, Result};
@@ -44,6 +45,11 @@ fn replace_base<P: AsRef<Path>>(base_dir: P, base_url: P, filepath: P) -> String
 /// Parse channel & episodes, and return the rendered xml.
 pub async fn process<P: AsRef<Path>>(base_dir: P, dirpath: P, base_url: P) -> Result<String> {
     let episode_infofiles = info::episode::available_episodes(dirpath.as_ref()).await?;
+    println!(
+        "- {} ({} episodes)",
+        dirpath.as_ref().to_string_lossy(),
+        episode_infofiles.len()
+    );
 
     let mut episodes: Vec<rss::episode::Episode> = vec![];
     for episode_infofile in episode_infofiles {
@@ -164,11 +170,17 @@ fn resize_image_to_fill<P: AsRef<Path>>(image_filepath: P, target_size: u32) -> 
     let img = open_image(&image_filepath.as_ref().to_string_lossy())?;
     let (a, b) = (img.get_width(), img.get_height());
     let t = target_size;
-    if a != t && b != t {
-        let (na, nb) = if a > b {
-            (t * a / b, t)
+    if !(a == t && b == t) {
+        let (na, nb, p_left, p_right, p_top, p_bot) = if a > b {
+            let pb = t - t * b / a;
+            let p_top = pb / 2;
+            let p_bot = pb - p_top;
+            (t, t * b / a, 0, 0, p_top, p_bot)
         } else {
-            (t, t * b / a)
+            let pa = t - t * a / b;
+            let p_left = pa / 2;
+            let p_right = pa - p_left;
+            (t * a / b, t, p_left, p_right, 0, 0)
         };
 
         let new_img = resize(
@@ -177,6 +189,19 @@ fn resize_image_to_fill<P: AsRef<Path>>(image_filepath: P, target_size: u32) -> 
             nb,
             photon_rs::transform::SamplingFilter::CatmullRom,
         );
+        let black = Rgba::new(0, 0, 0, 0);
+        let new_img = padding_left(&new_img, p_left, black);
+        let black = Rgba::new(0, 0, 0, 0);
+        let new_img = padding_right(&new_img, p_right, black);
+        let black = Rgba::new(0, 0, 0, 0);
+        let new_img = padding_top(&new_img, p_top, black);
+        let black = Rgba::new(0, 0, 0, 0);
+        let new_img = padding_bottom(&new_img, p_bot, black);
+
+        // let (fa, fb) = (new_img.get_width(), new_img.get_height());
+        // let path = image_filepath.as_ref().to_string_lossy();
+        // println!("dims: {a}x{b} -> {na}, {nb}, {p_left}, {p_right}, {p_top}, {p_bot} -> {fa}x{fb} - {path}");
+
         save_image(new_img, &image_filepath.as_ref().to_string_lossy());
     }
 
