@@ -10,7 +10,7 @@
 
 A podcasts downloader and server.
 
-Version requirement: _rustc 1.60+_
+Version requirement: _rustc 1.64+_
 
 ## Features
 
