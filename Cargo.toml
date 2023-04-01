@@ -2,7 +2,7 @@
 name = "podsync"
 version = "0.0.5"
 edition = "2021"
-rust-version = "1.60.0"
+rust-version = "1.64.0"
 description = "A podcasts downloader and feed-generator."
 readme = "README.md"
 
