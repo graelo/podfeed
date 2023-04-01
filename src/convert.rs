@@ -202,7 +202,7 @@ fn resize_image_to_fill<P: AsRef<Path>>(image_filepath: P, target_size: u32) -> 
         // let path = image_filepath.as_ref().to_string_lossy();
         // println!("dims: {a}x{b} -> {na}, {nb}, {p_left}, {p_right}, {p_top}, {p_bot} -> {fa}x{fb} - {path}");
 
-        save_image(new_img, &image_filepath.as_ref().to_string_lossy());
+        save_image(new_img, &image_filepath.as_ref().to_string_lossy())?;
     }
 
     Ok(())
