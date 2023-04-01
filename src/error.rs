@@ -33,7 +33,7 @@ pub enum Error {
     Image {
         #[from]
         /// Source error.
-        source: photon_rs::native::OpenError,
+        source: photon_rs::native::Error,
     },
 
     /// Serde JSON error.
