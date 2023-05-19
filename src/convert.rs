@@ -51,20 +51,29 @@ pub async fn process<P: AsRef<Path>>(base_dir: P, dirpath: P, base_url: P) -> Re
         episode_infofiles.len()
     );
 
-    let mut episodes: Vec<rss::episode::Episode> = vec![];
+    let mut episodes_with_indexes: Vec<(rss::episode::Episode, u32)> = vec![];
     for episode_infofile in episode_infofiles {
         let (episode_info, episode_enclosure, episode_image_filepath) =
             episode_infofile.parse().await?;
 
-        let rss_episode = convert_episode(
+        let (rss_episode, playlist_index) = convert_episode(
             base_dir.as_ref(),
             base_url.as_ref(),
             &episode_info,
             &episode_enclosure,
             &episode_image_filepath,
         )?;
-        episodes.push(rss_episode);
+        episodes_with_indexes.push((rss_episode, playlist_index));
     }
+
+    // Sort episodes by playlist index.
+    let episodes = {
+        episodes_with_indexes.sort_by(|a, b| a.1.cmp(&b.1));
+        episodes_with_indexes
+            .into_iter()
+            .map(|(episode, _)| episode)
+            .collect::<Vec<_>>()
+    };
 
     let channel_infofile = info::channel::available_channel(&dirpath).await?;
     let (channel_info, channel_image_filepath) = channel_infofile.parse().await?;
@@ -133,7 +142,7 @@ pub fn convert_episode<P: AsRef<Path>>(
     source: &info::episode::Info,
     enclosure: &info::episode::Enclosure,
     image_filepath: P,
-) -> Result<rss::episode::Episode> {
+) -> Result<(rss::episode::Episode, u32)> {
     resize_image_to_fill(image_filepath.as_ref(), 1400)?;
 
     let target = rss::episode::Episode {
@@ -163,7 +172,9 @@ pub fn convert_episode<P: AsRef<Path>>(
         explicit_content: "false".into(),
     };
 
-    Ok(target)
+    let playlist_index = source.playlist_index;
+
+    Ok((target, playlist_index))
 }
 
 fn resize_image_to_fill<P: AsRef<Path>>(image_filepath: P, target_size: u32) -> Result<()> {

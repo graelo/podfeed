@@ -93,6 +93,9 @@ pub struct Info {
     #[serde(rename = "upload_date")]
     pub upload_date: String,
 
+    /// Playlist Index.
+    pub playlist_index: u32,
+
     /// Episode title.
     pub title: String,
 
