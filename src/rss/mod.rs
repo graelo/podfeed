@@ -19,6 +19,10 @@ pub struct Rss {
     #[xml(attr = "xmlns:itunes")]
     pub namespace: String,
 
+    /// Additional namespace.
+    #[xml(attr = "xmlns:content")]
+    pub content_namespace: String,
+
     /// Channel definition.
     #[xml(child = "channel")]
     pub channel: Channel,

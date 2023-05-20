@@ -88,6 +88,7 @@ pub async fn process<P: AsRef<Path>>(base_dir: P, dirpath: P, base_url: P) -> Re
     let feed = rss::Rss {
         version: "2.0".into(),
         namespace: "http://www.itunes.com/dtds/podcast-1.0.dtd".into(),
+        content_namespace: "http://purl.org/rss/1.0/modules/content/".into(),
         channel: rss_channel,
     };
     let rendered_rss = feed.to_string()?;
