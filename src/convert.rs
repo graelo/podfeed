@@ -106,7 +106,17 @@ pub fn convert_channel<P: AsRef<Path>>(
     image_filepath: P,
     episodes: Vec<rss::episode::Episode>,
 ) -> Result<rss::channel::Channel> {
-    resize_image_to_fill(image_filepath.as_ref(), 1400)?;
+    // Resize channel image to fill 1400x1400 and add the "1400x1400" suffix.
+    let resized_image_filepath = get_resized_image_filepath(image_filepath.as_ref(), 1400);
+
+    // Resize the channel image if the resized image does not already exists.
+    if !resized_image_filepath.exists() {
+        resize_image_to_fill(
+            image_filepath.as_ref(),
+            resized_image_filepath.as_ref(),
+            1400,
+        )?;
+    }
 
     let channel = rss::channel::Channel {
         title: source.title.clone(),
@@ -116,7 +126,7 @@ pub fn convert_channel<P: AsRef<Path>>(
             image_url: replace_base(
                 base_dir.as_ref(),
                 base_url.as_ref(),
-                image_filepath.as_ref(),
+                resized_image_filepath.as_ref(),
             ),
         },
         author: source.author.clone(),
@@ -144,7 +154,17 @@ pub fn convert_episode<P: AsRef<Path>>(
     enclosure: &info::episode::Enclosure,
     image_filepath: P,
 ) -> Result<(rss::episode::Episode, u32)> {
-    resize_image_to_fill(image_filepath.as_ref(), 1400)?;
+    // Resize episode image to fill 1400x1400 and add the "1400x1400" suffix.
+    let resized_image_filepath = get_resized_image_filepath(image_filepath.as_ref(), 1400);
+
+    // Resize the channel image if the resized image does not already exists.
+    if !resized_image_filepath.exists() {
+        resize_image_to_fill(
+            image_filepath.as_ref(),
+            resized_image_filepath.as_ref(),
+            1400,
+        )?;
+    }
 
     let target = rss::episode::Episode {
         guid: source.guid.clone(),
@@ -166,7 +186,7 @@ pub fn convert_episode<P: AsRef<Path>>(
             file_url: replace_base(
                 base_dir.as_ref(),
                 base_url.as_ref(),
-                image_filepath.as_ref(),
+                resized_image_filepath.as_ref(),
             ),
         },
         duration: source.duration_seconds.to_string(),
@@ -178,44 +198,63 @@ pub fn convert_episode<P: AsRef<Path>>(
     Ok((target, playlist_index))
 }
 
-fn resize_image_to_fill<P: AsRef<Path>>(image_filepath: P, target_size: u32) -> Result<()> {
+/// Return the filepath to the resized image (same extension as the original image).
+fn get_resized_image_filepath<P: AsRef<Path>>(image_filepath: P, target_size: u32) -> PathBuf {
+    let mut path = image_filepath.as_ref().to_path_buf();
+    let filename = path.file_stem().unwrap().to_string_lossy();
+    let extension = image_filepath.as_ref().extension().unwrap();
+    let filename = format!("{}-{target_size}x{target_size}", filename);
+    path.set_file_name(filename);
+    path.set_extension(extension);
+    path
+}
+
+/// Resize an image to fill a square of `target_size` pixels.
+///
+/// This function saves the resized image to `path-1400x1400.png` if the `target_size` is 1400.
+///
+#[must_use = "Use the return value of this function"]
+fn resize_image_to_fill<P: AsRef<Path>>(
+    image_filepath: P,
+    resized_image_filepath: P,
+    target_size: u32,
+) -> Result<()> {
     let img = open_image(&image_filepath.as_ref().to_string_lossy())?;
     let (a, b) = (img.get_width(), img.get_height());
     let t = target_size;
-    if !(a == t && b == t) {
-        let (na, nb, p_left, p_right, p_top, p_bot) = if a > b {
-            let pb = t - t * b / a;
-            let p_top = pb / 2;
-            let p_bot = pb - p_top;
-            (t, t * b / a, 0, 0, p_top, p_bot)
-        } else {
-            let pa = t - t * a / b;
-            let p_left = pa / 2;
-            let p_right = pa - p_left;
-            (t * a / b, t, p_left, p_right, 0, 0)
-        };
 
-        let new_img = resize(
-            &img,
-            na,
-            nb,
-            photon_rs::transform::SamplingFilter::CatmullRom,
-        );
-        let black = Rgba::new(0, 0, 0, 0);
-        let new_img = padding_left(&new_img, p_left, black);
-        let black = Rgba::new(0, 0, 0, 0);
-        let new_img = padding_right(&new_img, p_right, black);
-        let black = Rgba::new(0, 0, 0, 0);
-        let new_img = padding_top(&new_img, p_top, black);
-        let black = Rgba::new(0, 0, 0, 0);
-        let new_img = padding_bottom(&new_img, p_bot, black);
+    let (na, nb, p_left, p_right, p_top, p_bot) = if a > b {
+        let pb = t - t * b / a;
+        let p_top = pb / 2;
+        let p_bot = pb - p_top;
+        (t, t * b / a, 0, 0, p_top, p_bot)
+    } else {
+        let pa = t - t * a / b;
+        let p_left = pa / 2;
+        let p_right = pa - p_left;
+        (t * a / b, t, p_left, p_right, 0, 0)
+    };
 
-        // let (fa, fb) = (new_img.get_width(), new_img.get_height());
-        // let path = image_filepath.as_ref().to_string_lossy();
-        // println!("dims: {a}x{b} -> {na}, {nb}, {p_left}, {p_right}, {p_top}, {p_bot} -> {fa}x{fb} - {path}");
+    let new_img = resize(
+        &img,
+        na,
+        nb,
+        photon_rs::transform::SamplingFilter::CatmullRom,
+    );
+    let black = Rgba::new(0, 0, 0, 0);
+    let new_img = padding_left(&new_img, p_left, black);
+    let black = Rgba::new(0, 0, 0, 0);
+    let new_img = padding_right(&new_img, p_right, black);
+    let black = Rgba::new(0, 0, 0, 0);
+    let new_img = padding_top(&new_img, p_top, black);
+    let black = Rgba::new(0, 0, 0, 0);
+    let new_img = padding_bottom(&new_img, p_bot, black);
 
-        save_image(new_img, &image_filepath.as_ref().to_string_lossy())?;
-    }
+    // let (fa, fb) = (new_img.get_width(), new_img.get_height());
+    // let path = image_filepath.as_ref().to_string_lossy();
+    // println!("dims: {a}x{b} -> {na}, {nb}, {p_left}, {p_right}, {p_top}, {p_bot} -> {fa}x{fb} - {path}");
+
+    save_image(new_img, &resized_image_filepath.as_ref().to_string_lossy())?;
 
     Ok(())
 }
