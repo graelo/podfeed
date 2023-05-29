@@ -12,6 +12,8 @@ use photon_rs::{
 
 use crate::{info, rss, Result};
 
+const TARGET_SIZE: u32 = 1400;
+
 /// List all playlist directories.
 pub async fn available_directories<P: AsRef<Path>>(data_dirpath: P) -> Result<Vec<PathBuf>> {
     let mut directories: Vec<PathBuf> = vec![];
@@ -107,14 +109,14 @@ pub fn convert_channel<P: AsRef<Path>>(
     episodes: Vec<rss::episode::Episode>,
 ) -> Result<rss::channel::Channel> {
     // Resize channel image to fill 1400x1400 and add the "1400x1400" suffix.
-    let resized_image_filepath = get_resized_image_filepath(image_filepath.as_ref(), 1400);
+    let resized_image_filepath = get_resized_image_filepath(image_filepath.as_ref(), TARGET_SIZE);
 
     // Resize the channel image if the resized image does not already exists.
     if !resized_image_filepath.exists() {
         resize_image_to_fill(
             image_filepath.as_ref(),
             resized_image_filepath.as_ref(),
-            1400,
+            TARGET_SIZE,
         )?;
     }
 
@@ -155,14 +157,14 @@ pub fn convert_episode<P: AsRef<Path>>(
     image_filepath: P,
 ) -> Result<(rss::episode::Episode, u32)> {
     // Resize episode image to fill 1400x1400 and add the "1400x1400" suffix.
-    let resized_image_filepath = get_resized_image_filepath(image_filepath.as_ref(), 1400);
+    let resized_image_filepath = get_resized_image_filepath(image_filepath.as_ref(), TARGET_SIZE);
 
     // Resize the channel image if the resized image does not already exists.
     if !resized_image_filepath.exists() {
         resize_image_to_fill(
             image_filepath.as_ref(),
             resized_image_filepath.as_ref(),
-            1400,
+            TARGET_SIZE,
         )?;
     }
 
