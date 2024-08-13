@@ -121,7 +121,7 @@ impl Info {
             .unwrap()
             .and_hms_opt(9, 10, 11)
             .unwrap();
-        DateTime::<Utc>::from_utc(naived_date, Utc)
+        DateTime::<Utc>::from_naive_utc_and_offset(naived_date, Utc)
     }
 }
 
