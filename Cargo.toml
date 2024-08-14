@@ -3,7 +3,7 @@ name = "podsync"
 version = "0.1.1"
 edition = "2021"
 rust-version = "1.74.0"
-description = "A podcasts downloader and feed-generator."
+description = "A podcast feed-generator."
 readme = "README.md"
 
 license = "MIT OR Apache-2.0"
