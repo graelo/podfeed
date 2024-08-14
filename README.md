@@ -8,7 +8,7 @@
 
 <!-- cargo-sync-readme start -->
 
-A podcasts downloader and server.
+Transforms a bunch of xml files from yt-dlp into proper Podcasts format.
 
 Version requirement: _rustc 1.74+_
 
