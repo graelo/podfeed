@@ -1,6 +1,6 @@
 [package]
 name = "podsync"
-version = "0.1.1"
+version = "0.1.2"
 edition = "2021"
 rust-version = "1.74.0"
 description = "A podcast feed-generator."
