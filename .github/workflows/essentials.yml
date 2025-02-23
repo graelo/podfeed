@@ -77,7 +77,10 @@ jobs:
       - name: Quality - cargo outdated
         timeout-minutes: 20
         run: |
-          cargo install --locked cargo-outdated || true
+          curl -sSfL https://github.com/kbknapp/cargo-outdated/releases/download/v0.16.0/cargo-outdated-0.16.0-x86_64-unknown-linux-musl.tar.gz | tar zx
+          chmod +x cargo-outdated
+          mv cargo-outdated ~/.cargo/bin
+          # cargo install --locked cargo-outdated || true
           rm -rf ~/.cargo/advisory-db
           cargo outdated --exit-code 1
 

@@ -4,7 +4,7 @@ use std::path::{Path, PathBuf};
 use clap::{CommandFactory, Parser};
 use clap_complete::generate;
 
-use podsync::{
+use podfeed::{
     config::{self, Config},
     Result,
 };
@@ -28,10 +28,10 @@ fn main() -> Result<()> {
 }
 
 async fn run(data_dir: &Path, base_url: &Path) -> Result<()> {
-    let directories = podsync::convert::available_directories(data_dir).await?;
+    let directories = podfeed::convert::available_directories(data_dir).await?;
 
     for dirpath in &directories {
-        let rss_content = podsync::convert::process(data_dir, dirpath, base_url).await?;
+        let rss_content = podfeed::convert::process(data_dir, dirpath, base_url).await?;
         let rss_filepath = append_ext("xml", dirpath);
         async_std::fs::write(rss_filepath, rss_content).await?;
         // let rss_filepath = data_dir.with_file_name()
