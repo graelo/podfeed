@@ -2,7 +2,7 @@
 
 set -e
 
-CRATE=podsync
+CRATE=podfeed
 MSRV=1.74
 
 get_rust_version() {

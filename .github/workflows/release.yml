@@ -150,11 +150,11 @@ jobs:
       - uses: mislav/bump-homebrew-formula-action@v3
         if: "!contains(github.ref, '-')" # skip prereleases
         with:
-          formula-name: podsync
+          formula-name: podfeed
           homebrew-tap: graelo/homebrew-tap
           # base-branch: main
           create-pullrequest: true
-          download-url: https://github.com/graelo/podsync/archive/refs/tags/${{ steps.extract-version.outputs.tag-name }}.tar.gz
+          download-url: https://github.com/graelo/podfeed/archive/refs/tags/${{ steps.extract-version.outputs.tag-name }}.tar.gz
           commit-message: |
             {{formulaName}} {{version}}
 
