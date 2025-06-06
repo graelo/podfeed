@@ -4,7 +4,7 @@ use std::path::{Path, PathBuf};
 
 use async_std::stream::StreamExt;
 use hard_xml::XmlWrite;
-use image::{DynamicImage, GenericImageView, Rgba, imageops};
+use image::{DynamicImage, GenericImageView, imageops};
 
 use crate::{Result, info, rss};
 
@@ -214,15 +214,15 @@ fn pad_image(
     pad_right: u32,
     pad_top: u32,
     pad_bottom: u32,
-    pad_color: Rgba<u8>,
-) -> image::RgbaImage {
+    pad_color: image::Rgb<u8>,
+) -> image::RgbImage {
     let (w, h) = img.dimensions();
     let new_w = w + pad_left + pad_right;
     let new_h = h + pad_top + pad_bottom;
-    let mut new_img = image::RgbaImage::from_pixel(new_w, new_h, pad_color);
+    let mut new_img = image::RgbImage::from_pixel(new_w, new_h, pad_color);
     image::imageops::replace(
         &mut new_img,
-        &img.to_rgba8(),
+        &img.to_rgb8(),
         pad_left as i64,
         pad_top as i64,
     );
@@ -256,7 +256,7 @@ fn resize_image_to_fill<P: AsRef<Path>>(
     };
 
     let new_img = img.resize(na, nb, imageops::FilterType::CatmullRom);
-    let black = Rgba::from([0, 0, 0, 0]);
+    let black = image::Rgb::from([0, 0, 0]);
     let new_img = pad_image(&new_img, p_left, p_right, p_top, p_bot, black);
 
     // let (fa, fb) = (new_img.get_width(), new_img.get_height());
