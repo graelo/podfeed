@@ -5,8 +5,8 @@ use clap::{CommandFactory, Parser};
 use clap_complete::generate;
 
 use podfeed::{
-    config::{self, Config},
     Result,
+    config::{self, Config},
 };
 
 fn main() -> Result<()> {

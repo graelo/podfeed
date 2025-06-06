@@ -3,11 +3,11 @@
 use std::path::{Path, PathBuf};
 
 use async_std::{fs, stream::StreamExt};
-use chrono::{offset::Utc, DateTime, Local, NaiveDate};
+use chrono::{DateTime, Local, NaiveDate, offset::Utc};
 use regex::Regex;
 use serde::Deserialize;
 
-use crate::{error::Error, Result};
+use crate::{Result, error::Error};
 
 /// Represents the info.json file of a channel.
 #[derive(Debug, Clone)]

@@ -3,7 +3,7 @@
 use std::path::{Path, PathBuf};
 
 use async_std::{fs, stream::StreamExt};
-use chrono::{offset::Utc, DateTime, NaiveDate};
+use chrono::{DateTime, NaiveDate, offset::Utc};
 use regex::Regex;
 use serde::Deserialize;
 

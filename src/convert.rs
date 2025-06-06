@@ -4,9 +4,9 @@ use std::path::{Path, PathBuf};
 
 use async_std::stream::StreamExt;
 use hard_xml::XmlWrite;
-use image::{imageops, DynamicImage, GenericImageView, Rgba};
+use image::{DynamicImage, GenericImageView, Rgba, imageops};
 
-use crate::{info, rss, Result};
+use crate::{Result, info, rss};
 
 const TARGET_SIZE: u32 = 1400;
 
