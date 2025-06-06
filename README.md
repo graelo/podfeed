@@ -2,7 +2,7 @@
 
 [![crate](https://img.shields.io/crates/v/podfeed.svg)](https://crates.io/crates/podfeed)
 [![documentation](https://docs.rs/podfeed/badge.svg)](https://docs.rs/podfeed)
-[![minimum rustc 1.74](https://img.shields.io/badge/rustc-1.74+-red.svg)](https://rust-lang.github.io/rfcs/2495-min-rust-version.html)
+[![minimum rustc 1.85](https://img.shields.io/badge/rustc-1.85-red.svg)](https://rust-lang.github.io/rfcs/2495-min-rust-version.html)
 [![rust 2021 edition](https://img.shields.io/badge/edition-2021-blue.svg)](https://doc.rust-lang.org/edition-guide/rust-2021/index.html)
 [![build status](https://github.com/graelo/podfeed/actions/workflows/essentials.yml/badge.svg)](https://github.com/graelo/podfeed/actions/workflows/essentials.yml)
 
@@ -10,7 +10,7 @@
 
 Transforms a bunch of xml files from yt-dlp into proper Podcasts format.
 
-Version requirement: _rustc 1.74+_
+Version requirement: _rustc 1.85+_
 
 ## Features
 

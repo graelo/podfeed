@@ -3,12 +3,11 @@
 set -e
 
 CRATE=podfeed
-MSRV=1.74
+MSRV=1.85
 
 get_rust_version() {
-  local array=($(rustc --version));
-  echo "${array[1]}";
-  return 0;
+  read -r _ version _ < <(rustc --version);
+  echo "$version";
 }
 RUST_VERSION=$(get_rust_version)
 
@@ -28,7 +27,7 @@ if ! check_version $MSRV ; then
 fi
 
 FEATURES=()
-# check_version 1.74 && FEATURES+=(libm)
+# check_version 1.85 && FEATURES+=(libm)
 echo "Testing supported features: ${FEATURES[*]}"
 
 set -x

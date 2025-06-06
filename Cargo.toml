@@ -1,8 +1,8 @@
 [package]
 name = "podfeed"
 version = "0.2.0"
-edition = "2021"
-rust-version = "1.74.0"
+edition = "2024"
+rust-version = "1.85.0"
 description = "A podcast feed-generator."
 readme = "README.md"
 
@@ -12,7 +12,7 @@ repository = "https://github.com/graelo/podfeed"
 homepage = "https://github.com/graelo/podfeed"
 documentation = "https://docs.rs/podfeed"
 
-keywords = ["podcasts", "server"]
+keywords = ["podcasts"]
 categories = ["command-line-utilities"]
 exclude = ["/.github"]
 
@@ -38,7 +38,7 @@ hard-xml = "1"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1"
 chrono = "0.4.20"
-photon-rs = "0.3.1"
+image = { version = "0.25", features = ["jpeg", "png"] }
 
 [build-dependencies]
 
