@@ -201,7 +201,7 @@ fn get_resized_image_filepath<P: AsRef<Path>>(image_filepath: P, target_size: u3
     let mut path = image_filepath.as_ref().to_path_buf();
     let filename = path.file_stem().unwrap().to_string_lossy();
     let extension = image_filepath.as_ref().extension().unwrap();
-    let filename = format!("{}-{target_size}x{target_size}", filename);
+    let filename = format!("{filename}-{target_size}x{target_size}");
     path.set_file_name(filename);
     path.set_extension(extension);
     path
