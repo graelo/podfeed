@@ -12,7 +12,7 @@ repository = "https://github.com/graelo/podfeed"
 homepage = "https://github.com/graelo/podfeed"
 documentation = "https://docs.rs/podfeed"
 
-keywords = ["podcasts", "server"]
+keywords = ["podcasts"]
 categories = ["command-line-utilities"]
 exclude = ["/.github"]
 
