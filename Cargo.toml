@@ -1,8 +1,8 @@
 [package]
 name = "podfeed"
 version = "0.2.0"
-edition = "2021"
-rust-version = "1.74.0"
+edition = "2024"
+rust-version = "1.85.0"
 description = "A podcast feed-generator."
 readme = "README.md"
 
