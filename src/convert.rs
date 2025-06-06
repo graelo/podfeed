@@ -4,11 +4,7 @@ use std::path::{Path, PathBuf};
 
 use async_std::stream::StreamExt;
 use hard_xml::XmlWrite;
-use photon_rs::{
-    native::{open_image, save_image},
-    transform::{padding_bottom, padding_left, padding_right, padding_top, resize},
-    Rgba,
-};
+use image::{imageops, DynamicImage, GenericImageView, Rgba};
 
 use crate::{info, rss, Result};
 
@@ -211,6 +207,28 @@ fn get_resized_image_filepath<P: AsRef<Path>>(image_filepath: P, target_size: u3
     path
 }
 
+/// Pad an image with the given color on all sides.
+fn pad_image(
+    img: &DynamicImage,
+    pad_left: u32,
+    pad_right: u32,
+    pad_top: u32,
+    pad_bottom: u32,
+    pad_color: Rgba<u8>,
+) -> image::RgbaImage {
+    let (w, h) = img.dimensions();
+    let new_w = w + pad_left + pad_right;
+    let new_h = h + pad_top + pad_bottom;
+    let mut new_img = image::RgbaImage::from_pixel(new_w, new_h, pad_color);
+    image::imageops::replace(
+        &mut new_img,
+        &img.to_rgba8(),
+        pad_left as i64,
+        pad_top as i64,
+    );
+    new_img
+}
+
 /// Resize an image to fill a square of `target_size` pixels.
 ///
 /// This function saves the resized image to `path-1400x1400.png` if the `target_size` is 1400.
@@ -221,8 +239,8 @@ fn resize_image_to_fill<P: AsRef<Path>>(
     resized_image_filepath: P,
     target_size: u32,
 ) -> Result<()> {
-    let img = open_image(&image_filepath.as_ref().to_string_lossy())?;
-    let (a, b) = (img.get_width(), img.get_height());
+    let img = image::open(image_filepath)?;
+    let (a, b) = img.dimensions();
     let t = target_size;
 
     let (na, nb, p_left, p_right, p_top, p_bot) = if a > b {
@@ -237,26 +255,15 @@ fn resize_image_to_fill<P: AsRef<Path>>(
         (t * a / b, t, p_left, p_right, 0, 0)
     };
 
-    let new_img = resize(
-        &img,
-        na,
-        nb,
-        photon_rs::transform::SamplingFilter::CatmullRom,
-    );
-    let black = Rgba::new(0, 0, 0, 0);
-    let new_img = padding_left(&new_img, p_left, black);
-    let black = Rgba::new(0, 0, 0, 0);
-    let new_img = padding_right(&new_img, p_right, black);
-    let black = Rgba::new(0, 0, 0, 0);
-    let new_img = padding_top(&new_img, p_top, black);
-    let black = Rgba::new(0, 0, 0, 0);
-    let new_img = padding_bottom(&new_img, p_bot, black);
+    let new_img = img.resize(na, nb, imageops::FilterType::CatmullRom);
+    let black = Rgba::from([0, 0, 0, 0]);
+    let new_img = pad_image(&new_img, p_left, p_right, p_top, p_bot, black);
 
     // let (fa, fb) = (new_img.get_width(), new_img.get_height());
     // let path = image_filepath.as_ref().to_string_lossy();
     // println!("dims: {a}x{b} -> {na}, {nb}, {p_left}, {p_right}, {p_top}, {p_bot} -> {fa}x{fb} - {path}");
 
-    save_image(new_img, &resized_image_filepath.as_ref().to_string_lossy())?;
+    new_img.save(resized_image_filepath)?;
 
     Ok(())
 }
