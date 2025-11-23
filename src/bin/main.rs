@@ -15,7 +15,7 @@ fn main() -> Result<()> {
     match config.command {
         config::Command::Generate { data_dir, base_url } => {
             let base_url = Path::new(&base_url);
-            async_std::task::block_on(run(&data_dir, base_url))?;
+            smol::block_on(run(&data_dir, base_url))?;
         }
         config::Command::GenerateCompletion { shell } => {
             let mut app = Config::command();
@@ -33,7 +33,7 @@ async fn run(data_dir: &Path, base_url: &Path) -> Result<()> {
     for dirpath in &directories {
         let rss_content = podfeed::convert::process(data_dir, dirpath, base_url).await?;
         let rss_filepath = append_ext("xml", dirpath);
-        async_std::fs::write(rss_filepath, rss_content).await?;
+        smol::fs::write(rss_filepath, rss_content).await?;
         // let rss_filepath = data_dir.with_file_name()
         // println!("{}", rendered_rss);
     }

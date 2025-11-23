@@ -2,7 +2,7 @@
 
 use std::path::{Path, PathBuf};
 
-use async_std::{fs, stream::StreamExt};
+use futures::stream::StreamExt;
 use chrono::{DateTime, Local, NaiveDate, offset::Utc};
 use regex::Regex;
 use serde::Deserialize;
@@ -21,7 +21,7 @@ pub struct InfoFile {
 impl InfoFile {
     /// Parse the associated `Info` and return it along with the image url.
     pub async fn parse(&self) -> Result<(Info, PathBuf)> {
-        let content = async_std::fs::read_to_string(&self.filepath).await?;
+        let content = smol::fs::read_to_string(&self.filepath).await?;
         let ch_info: Info = serde_json::from_str(&content)?;
 
         let image_filepath = self
@@ -44,7 +44,7 @@ pub async fn available_channel<P: AsRef<Path>>(dirpath: P) -> Result<InfoFile> {
     // let pattern = r#"[^-]+--([a-zA-Z0-9-_]{34})--.*\.info\.json"#;
     let matcher = Regex::new(pattern).unwrap();
 
-    let mut entries = fs::read_dir(dirpath.as_ref()).await?;
+    let mut entries = smol::fs::read_dir(dirpath.as_ref()).await?;
     while let Some(entry) = entries.next().await {
         let entry = entry?;
         let path = entry.path();
