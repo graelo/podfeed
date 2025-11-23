@@ -2,8 +2,8 @@
 
 use std::path::{Path, PathBuf};
 
-use futures::stream::StreamExt;
 use chrono::{DateTime, Local, NaiveDate, offset::Utc};
+use futures::stream::StreamExt;
 use regex::Regex;
 use serde::Deserialize;
 
@@ -52,7 +52,7 @@ pub async fn available_channel<P: AsRef<Path>>(dirpath: P) -> Result<InfoFile> {
             let youtube_id = &captures[1];
             let channel = InfoFile {
                 youtube_id: youtube_id.into(),
-                filepath: path.into(),
+                filepath: path,
             };
             files.push(channel);
         }

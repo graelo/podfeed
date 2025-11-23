@@ -2,8 +2,8 @@
 
 use std::path::{Path, PathBuf};
 
-use futures::stream::StreamExt;
 use chrono::{DateTime, NaiveDate, offset::Utc};
+use futures::stream::StreamExt;
 use regex::Regex;
 use serde::Deserialize;
 
@@ -43,7 +43,7 @@ impl InfoFile {
             .with_extension("png");
 
         let enclosure = Enclosure {
-            video_filepath: video_filepath.into(),
+            video_filepath,
             video_filelength,
             video_filetype: "mp4".into(),
         };
@@ -70,7 +70,7 @@ pub async fn available_episodes<P: AsRef<Path>>(dirpath: P) -> Result<Vec<InfoFi
             let episode = InfoFile {
                 pub_date,
                 youtube_id: youtube_id.into(),
-                filepath: path.into(),
+                filepath: path,
             };
             episodes.push(episode);
         }

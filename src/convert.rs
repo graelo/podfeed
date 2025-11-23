@@ -22,7 +22,7 @@ pub async fn available_directories<P: AsRef<Path>>(data_dirpath: P) -> Result<Ve
             continue;
         }
         if smol::fs::metadata(&path).await?.is_dir() {
-            directories.push(path.into());
+            directories.push(path);
         }
     }
 
