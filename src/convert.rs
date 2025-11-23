@@ -2,7 +2,7 @@
 
 use std::path::{Path, PathBuf};
 
-use async_std::stream::StreamExt;
+use futures::stream::StreamExt;
 use hard_xml::XmlWrite;
 use image::{DynamicImage, GenericImageView, imageops};
 
@@ -14,15 +14,15 @@ const TARGET_SIZE: u32 = 1400;
 pub async fn available_directories<P: AsRef<Path>>(data_dirpath: P) -> Result<Vec<PathBuf>> {
     let mut directories: Vec<PathBuf> = vec![];
 
-    let mut entries = async_std::fs::read_dir(data_dirpath.as_ref()).await?;
+    let mut entries = smol::fs::read_dir(data_dirpath.as_ref()).await?;
     while let Some(entry) = entries.next().await {
         let entry = entry?;
         let path = entry.path();
         if path.file_name().unwrap() == "Cache" {
             continue;
         }
-        if path.is_dir().await {
-            directories.push(path.into());
+        if smol::fs::metadata(&path).await?.is_dir() {
+            directories.push(path);
         }
     }
 

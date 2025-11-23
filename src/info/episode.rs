@@ -2,8 +2,8 @@
 
 use std::path::{Path, PathBuf};
 
-use async_std::{fs, stream::StreamExt};
 use chrono::{DateTime, NaiveDate, offset::Utc};
+use futures::stream::StreamExt;
 use regex::Regex;
 use serde::Deserialize;
 
@@ -23,18 +23,17 @@ pub struct InfoFile {
 impl InfoFile {
     /// Parse the associated `EpisodeInfo` and return it along with the enclosure.
     pub async fn parse(&self) -> Result<(Info, Enclosure, PathBuf)> {
-        let content = async_std::fs::read_to_string(&self.filepath).await?;
+        let content = smol::fs::read_to_string(&self.filepath).await?;
         let ep_info: Info = serde_json::from_str(&content)?;
 
-        let video_filepath: async_std::path::PathBuf = self
+        let video_filepath = self
             .filepath
             // remove ".json"
             .with_extension("")
             // replace ".info" with ".mp4"
-            .with_extension("mp4")
-            .into();
+            .with_extension("mp4");
 
-        let video_filelength = video_filepath.metadata().await?.len();
+        let video_filelength = smol::fs::metadata(&video_filepath).await?.len();
 
         let image_filepath = self
             .filepath
@@ -44,7 +43,7 @@ impl InfoFile {
             .with_extension("png");
 
         let enclosure = Enclosure {
-            video_filepath: video_filepath.into(),
+            video_filepath,
             video_filelength,
             video_filetype: "mp4".into(),
         };
@@ -60,7 +59,7 @@ pub async fn available_episodes<P: AsRef<Path>>(dirpath: P) -> Result<Vec<InfoFi
     let pattern = r#"(\d{8})--(.{11})--.*\.info\.json"#;
     let matcher = Regex::new(pattern).unwrap();
 
-    let mut entries = fs::read_dir(dirpath.as_ref()).await?;
+    let mut entries = smol::fs::read_dir(dirpath.as_ref()).await?;
     while let Some(entry) = entries.next().await {
         let entry = entry?;
         let path = entry.path();
@@ -71,7 +70,7 @@ pub async fn available_episodes<P: AsRef<Path>>(dirpath: P) -> Result<Vec<InfoFi
             let episode = InfoFile {
                 pub_date,
                 youtube_id: youtube_id.into(),
-                filepath: path.into(),
+                filepath: path,
             };
             episodes.push(episode);
         }

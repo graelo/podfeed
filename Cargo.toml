@@ -30,7 +30,7 @@ regex = "1.7"
 # si-scale = "0.2"
 
 futures = "0.3"
-async-std = { version = "1", features = ["unstable"] }
+smol = "2"
 
 # ser/deser
 tempfile = "3"
