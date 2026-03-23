@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        rust: [1.85.0, beta, nightly]
+        rust: [1.88.0, beta, nightly]
 
     steps:
       - name: Rust install
@@ -59,7 +59,7 @@ jobs:
     strategy:
       matrix:
         include:
-          - os: macos-13
+          - os: macos-15-intel
             target: x86_64-apple-darwin
             type: unix
             toolchain: stable
