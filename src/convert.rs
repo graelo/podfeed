@@ -66,7 +66,7 @@ pub async fn process<P: AsRef<Path>>(base_dir: P, dirpath: P, base_url: P) -> Re
 
     // Sort episodes by playlist index.
     let episodes = {
-        episodes_with_indexes.sort_by(|a, b| a.1.cmp(&b.1));
+        episodes_with_indexes.sort_by_key(|a| a.1);
         episodes_with_indexes
             .into_iter()
             .map(|(episode, _)| episode)
