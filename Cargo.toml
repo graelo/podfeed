@@ -2,7 +2,7 @@
 name = "podfeed"
 version = "0.3.2"
 edition = "2024"
-rust-version = "1.88.0"
+rust-version = "1.95.0"
 description = "A podcast feed-generator."
 readme = "README.md"
 

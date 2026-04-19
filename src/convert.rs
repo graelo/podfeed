@@ -107,8 +107,8 @@ pub fn convert_channel<P: AsRef<Path>>(
     // Resize channel image to fill 1400x1400 and add the "1400x1400" suffix.
     let resized_image_filepath = get_resized_image_filepath(image_filepath.as_ref(), TARGET_SIZE);
 
-    // Resize the channel image if the resized image does not already exists.
-    if !resized_image_filepath.exists() {
+    // Resize the channel image if the resized image does not already exist.
+    if !std::fs::exists(&resized_image_filepath)? {
         resize_image_to_fill(
             image_filepath.as_ref(),
             resized_image_filepath.as_ref(),
@@ -155,8 +155,8 @@ pub fn convert_episode<P: AsRef<Path>>(
     // Resize episode image to fill 1400x1400 and add the "1400x1400" suffix.
     let resized_image_filepath = get_resized_image_filepath(image_filepath.as_ref(), TARGET_SIZE);
 
-    // Resize the channel image if the resized image does not already exists.
-    if !resized_image_filepath.exists() {
+    // Resize the episode image if the resized image does not already exist.
+    if !std::fs::exists(&resized_image_filepath)? {
         resize_image_to_fill(
             image_filepath.as_ref(),
             resized_image_filepath.as_ref(),
