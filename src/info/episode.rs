@@ -134,3 +134,67 @@ pub struct Enclosure {
     /// File type of the video.
     pub video_filetype: String,
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn sample_json() -> &'static str {
+        r#"{
+            "id": "dQw4w9WgXcQ",
+            "upload_date": "20230519",
+            "playlist_index": 3,
+            "title": "Test Episode",
+            "webpage_url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+            "description": "A test episode",
+            "channel": "Test Author",
+            "duration": 212
+        }"#
+    }
+
+    #[test]
+    fn deserialize_episode_info() {
+        let info: Info = serde_json::from_str(sample_json()).unwrap();
+        assert_eq!(info.guid, "dQw4w9WgXcQ");
+        assert_eq!(info.upload_date, "20230519");
+        assert_eq!(info.playlist_index, 3);
+        assert_eq!(info.title, "Test Episode");
+        assert_eq!(info.link, "https://www.youtube.com/watch?v=dQw4w9WgXcQ");
+        assert_eq!(info.description, "A test episode");
+        assert_eq!(info.author, "Test Author");
+        assert_eq!(info.duration_seconds, 212);
+    }
+
+    #[test]
+    fn pub_date_parses_yyyymmdd() {
+        let info: Info = serde_json::from_str(sample_json()).unwrap();
+        let dt = info.pub_date();
+        assert_eq!(dt.format("%Y-%m-%d").to_string(), "2023-05-19");
+    }
+
+    #[test]
+    fn episode_filename_regex_extracts_date_and_id() {
+        let pattern = r#"(\d{8})--(.{11})--.*\.info\.json"#;
+        let matcher = Regex::new(pattern).unwrap();
+
+        let valid = "20230519--dQw4w9WgXcQ--Some_Title.info.json";
+        let caps = matcher.captures(valid).unwrap();
+        assert_eq!(&caps[1], "20230519");
+        assert_eq!(&caps[2], "dQw4w9WgXcQ");
+    }
+
+    #[test]
+    fn episode_filename_regex_rejects_channel_file() {
+        let pattern = r#"(\d{8})--(.{11})--.*\.info\.json"#;
+        let matcher = Regex::new(pattern).unwrap();
+
+        let channel = "NA--PLabcdefghij1234567890--Playlist.info.json";
+        assert!(matcher.captures(channel).is_none());
+    }
+
+    #[test]
+    fn episode_date_parsing_from_filename() {
+        let date = NaiveDate::parse_from_str("20230519", "%Y%m%d").unwrap();
+        assert_eq!(date.to_string(), "2023-05-19");
+    }
+}
