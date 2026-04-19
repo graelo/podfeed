@@ -267,3 +267,110 @@ fn resize_image_to_fill<P: AsRef<Path>>(
 
     Ok(())
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn replace_base_substitutes_directory_with_url() {
+        let result = replace_base(
+            Path::new("/data/podcasts"),
+            Path::new("https://cdn.example.com/podcasts"),
+            Path::new("/data/podcasts/channel1/episode.mp4"),
+        );
+        assert_eq!(
+            result,
+            "https://cdn.example.com/podcasts/channel1/episode.mp4"
+        );
+    }
+
+    #[test]
+    fn replace_base_handles_trailing_slash() {
+        let result = replace_base(
+            Path::new("/data"),
+            Path::new("https://cdn.example.com"),
+            Path::new("/data/dir/file.jpg"),
+        );
+        assert_eq!(result, "https://cdn.example.com/dir/file.jpg");
+    }
+
+    #[test]
+    fn get_resized_image_filepath_appends_dimensions() {
+        let path = PathBuf::from("/data/channel/image.jpg");
+        let resized = get_resized_image_filepath(&path, 1400);
+        assert_eq!(resized, PathBuf::from("/data/channel/image-1400x1400.jpg"));
+    }
+
+    #[test]
+    fn get_resized_image_filepath_preserves_extension() {
+        let png = PathBuf::from("/tmp/thumb.png");
+        let resized = get_resized_image_filepath(&png, 800);
+        assert_eq!(resized, PathBuf::from("/tmp/thumb-800x800.png"));
+    }
+
+    #[test]
+    fn pad_image_produces_correct_dimensions() {
+        let img = DynamicImage::new_rgb8(100, 60);
+        let padded = pad_image(&img, 10, 10, 20, 20, image::Rgb([0, 0, 0]));
+        assert_eq!(padded.width(), 120);
+        assert_eq!(padded.height(), 100);
+    }
+
+    #[test]
+    fn convert_episode_builds_rss_episode() {
+        // Create a minimal 2x2 image on disk for the resize step.
+        let tmp = tempfile::TempDir::new().unwrap();
+        let img_path = tmp.path().join("thumb.png");
+        image::RgbImage::from_pixel(2, 2, image::Rgb([0, 0, 0]))
+            .save(&img_path)
+            .unwrap();
+
+        let source = info::episode::Info {
+            guid: "abc123".into(),
+            upload_date: "20230101".into(),
+            playlist_index: 5,
+            title: "Ep Title".into(),
+            link: "https://youtube.com/watch?v=abc123".into(),
+            description: "desc".into(),
+            author: "Author".into(),
+            duration_seconds: 600,
+        };
+
+        let enclosure = info::episode::Enclosure {
+            video_filepath: tmp.path().join("video.mp4"),
+            video_filelength: 123456,
+            video_filetype: "mp4".into(),
+        };
+
+        let base_dir: &Path = tmp.path();
+        let base_url: &Path = Path::new("https://cdn.example.com");
+        let img: &Path = img_path.as_path();
+        let (ep, idx) = convert_episode(base_dir, base_url, &source, &enclosure, img).unwrap();
+
+        assert_eq!(idx, 5);
+        assert_eq!(ep.guid, "abc123");
+        assert_eq!(ep.author, "Author");
+        assert_eq!(ep.duration, "600");
+        assert_eq!(ep.enclosure.file_type, "mp4");
+        assert_eq!(ep.enclosure.file_length, "123456");
+        assert!(ep.enclosure.file_url.starts_with("https://cdn.example.com"));
+        assert!(ep.image.file_url.contains("thumb-1400x1400.png"));
+    }
+
+    #[test]
+    fn resize_image_to_fill_creates_square_output() {
+        let tmp = tempfile::TempDir::new().unwrap();
+        let src = tmp.path().join("wide.png");
+        // 200x100 landscape image
+        image::RgbImage::from_pixel(200, 100, image::Rgb([128, 128, 128]))
+            .save(&src)
+            .unwrap();
+
+        let dst = tmp.path().join("wide-100x100.png");
+        resize_image_to_fill(&src, &dst, 100).unwrap();
+
+        let resized = image::open(&dst).unwrap();
+        assert_eq!(resized.dimensions(), (100, 100));
+    }
+}
