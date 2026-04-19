@@ -8,6 +8,8 @@ and this project adheres to
 
 ## [Unreleased]
 
+## [0.3.3] - 2026-04-19
+
 ### Security
 
 - Harden GitHub Actions workflows: pin third-party actions to commit SHAs,
@@ -22,8 +24,14 @@ and this project adheres to
   extracted into reusable workflows
 - Remove cache from release workflow to prevent cache poisoning
 
+### Added
+
+- Unit tests for JSON parsing, date conversion, path rewriting, image
+  processing, episode-to-RSS conversion, and XML serialization
+
 ### Changed
 
+- Bump MSRV to 1.95
 - Linux release binaries are now statically linked against musl
   (`x86_64-unknown-linux-musl`, `aarch64-unknown-linux-musl`)
 - Switch test runner from `cargo test` to `cargo nextest`
@@ -32,6 +40,14 @@ and this project adheres to
 - Release artifacts retention shortened to 1 day
 - Drop `cargo-outdated` and `cargo-deny` from the essentials workflow
   (cargo-deny moved to a reusable supply-chain audit workflow)
+- Drop `cargo-audit` from CI (covered by `cargo-pants`)
+- Remove Windows build target from CI and release workflows
+- Bump dependencies
+
+### Fixed
+
+- Image resize existence check now uses `std::fs::exists()` which properly
+  propagates I/O errors instead of silently returning `false`
 
 ## [0.3.2] - 2025-11-23
 
@@ -194,7 +210,8 @@ Initial public release.
 
 - Generate RSS feeds from `info.json` files
 
-[Unreleased]: https://github.com/graelo/podfeed/compare/v0.3.2...HEAD
+[Unreleased]: https://github.com/graelo/podfeed/compare/v0.3.3...HEAD
+[0.3.3]: https://github.com/graelo/podfeed/compare/v0.3.2...v0.3.3
 [0.3.2]: https://github.com/graelo/podfeed/compare/v0.3.1...v0.3.2
 [0.3.1]: https://github.com/graelo/podfeed/compare/v0.3.0...v0.3.1
 [0.3.0]: https://github.com/graelo/podfeed/compare/v0.2.0...v0.3.0
