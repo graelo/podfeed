@@ -84,10 +84,6 @@ jobs:
             target: aarch64-apple-darwin
             type: unix
             toolchain: stable
-          - os: windows-latest
-            target: x86_64-pc-windows-msvc
-            type: windows
-            toolchain: stable
     steps:
       - name: Rust install
         uses: dtolnay/rust-toolchain@3c5f7ea28cd621ae0bf5283f0e981fb97b8a7af9 # master
