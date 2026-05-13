@@ -166,7 +166,10 @@ pub fn convert_episode<P: AsRef<Path>>(
 
     let target = rss::episode::Episode {
         guid: source.guid.clone(),
-        pub_date: format!("{}", &source.pub_date().format("%a, %d %b %Y %H:%M:%S %z")),
+        pub_date: source
+            .pub_date()
+            .format("%a, %d %b %Y %H:%M:%S %z")
+            .to_string(),
         title: source.title.clone(),
         link: source.link.clone(),
         description: source.description.clone(),
