@@ -22,7 +22,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     permissions:
       contents: read
-      id-token: write           # build provenance
+      id-token: write # build provenance
       attestations: write
     defaults:
       run:
@@ -125,7 +125,7 @@ jobs:
     runs-on: ubuntu-latest
     environment: release
     permissions:
-      contents: write           # gh release create
+      contents: write # gh release create
     needs:
       - prepare-artifacts
     steps:
@@ -180,6 +180,8 @@ jobs:
           private-key: ${{ secrets.APP_PRIVATE_KEY }}
           owner: graelo
           repositories: homebrew-tap
+          permission-contents: write
+          permission-pull-requests: write
 
       - name: Extract version
         id: extract-version
