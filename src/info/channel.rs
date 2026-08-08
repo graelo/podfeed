@@ -40,7 +40,7 @@ impl InfoFile {
 pub async fn available_channel<P: AsRef<Path>>(dirpath: P) -> Result<InfoFile> {
     let mut files: Vec<InfoFile> = vec![];
 
-    let pattern = r#"NA--([a-zA-Z0-9-_]{18,34})--.*\.info\.json"#;
+    let pattern = r#"NA--([a-zA-Z0-9-_]{11,34})--.*\.info\.json"#;
     // let pattern = r#"[^-]+--([a-zA-Z0-9-_]{34})--.*\.info\.json"#;
     let matcher = Regex::new(pattern).unwrap();
 
@@ -157,7 +157,7 @@ mod tests {
 
     #[test]
     fn channel_filename_regex_matches_valid_names() {
-        let pattern = r#"NA--([a-zA-Z0-9-_]{18,34})--.*\.info\.json"#;
+        let pattern = r#"NA--([a-zA-Z0-9-_]{11,34})--.*\.info\.json"#;
         let matcher = Regex::new(pattern).unwrap();
 
         let valid = "NA--PLabcdefghij1234567890--My_Playlist--something.info.json";
@@ -168,14 +168,14 @@ mod tests {
 
     #[test]
     fn channel_filename_regex_rejects_non_channel() {
-        let pattern = r#"NA--([a-zA-Z0-9-_]{18,34})--.*\.info\.json"#;
+        let pattern = r#"NA--([a-zA-Z0-9-_]{11,34})--.*\.info\.json"#;
         let matcher = Regex::new(pattern).unwrap();
 
         // Episode file (date prefix, not "NA")
         let episode = "20250601--abcdefghijk--Title.info.json";
         assert!(matcher.captures(episode).is_none());
 
-        // ID too short
+        // ID too short (less than 11 chars)
         let short_id = "NA--abc--Title.info.json";
         assert!(matcher.captures(short_id).is_none());
     }
