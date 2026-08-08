@@ -8,6 +8,12 @@ and this project adheres to
 
 ## [Unreleased]
 
+## [0.3.5] - 2026-08-08
+
+### Fixed
+
+- Produce exact 1400×1400 episode artwork so Apple Podcasts displays per-episode screenshots instead of falling back to the show cover (the previous 1399×1400 output was rejected as non-square)
+
 ## [0.3.4] - 2026-08-08
 
 ### Added
@@ -224,7 +230,8 @@ Initial public release.
 
 - Generate RSS feeds from `info.json` files
 
-[Unreleased]: https://github.com/graelo/podfeed/compare/v0.3.4...HEAD
+[Unreleased]: https://github.com/graelo/podfeed/compare/v0.3.5...HEAD
+[0.3.5]: https://github.com/graelo/podfeed/compare/v0.3.4...v0.3.5
 [0.3.4]: https://github.com/graelo/podfeed/compare/v0.3.3...v0.3.4
 [0.3.3]: https://github.com/graelo/podfeed/compare/v0.3.2...v0.3.3
 [0.3.2]: https://github.com/graelo/podfeed/compare/v0.3.1...v0.3.2
