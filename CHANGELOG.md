@@ -8,6 +8,18 @@ and this project adheres to
 
 ## [Unreleased]
 
+### Added
+
+- Add coverage for directory discovery, feed generation, image conversion, and
+  RSS channel serialization
+
+### Fixed
+
+- Accept channel playlist IDs between 11 and 34 characters instead of requiring
+  at least 18 characters
+- Match channel info filenames by basename so hyphenated playlist IDs are
+  parsed correctly
+
 ## [0.3.3] - 2026-04-19
 
 ### Security
