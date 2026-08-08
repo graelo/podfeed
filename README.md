@@ -8,18 +8,28 @@
 
 <!-- cargo-sync-readme start -->
 
-Transforms a bunch of xml files from yt-dlp into proper Podcasts format.
+Generates podcast RSS feeds from media and `.info.json` files created by
+yt-dlp.
 
 Version requirement: _rustc 1.95+_
 
 ## Features
 
-- Download podcasts
-- Create rss feed for mainstream podcasts players.
+- Generate RSS feeds for podcast players
+- Resize channel and episode artwork
+- Generate shell completion scripts
 
 ## Getting started
 
-Work in progress.
+Generate feeds for a yt-dlp data directory:
+
+```sh
+podfeed generate \
+  --data-dir ./data \
+  --base-url https://podcasts.example.com
+```
+
+Generate shell completions with `podfeed generate-completion <shell>`.
 
 ## Caveats
 

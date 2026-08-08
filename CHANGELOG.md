@@ -8,6 +8,8 @@ and this project adheres to
 
 ## [Unreleased]
 
+## [0.3.4] - 2026-08-08
+
 ### Added
 
 - Add coverage for directory discovery, feed generation, image conversion, and
@@ -222,7 +224,8 @@ Initial public release.
 
 - Generate RSS feeds from `info.json` files
 
-[Unreleased]: https://github.com/graelo/podfeed/compare/v0.3.3...HEAD
+[Unreleased]: https://github.com/graelo/podfeed/compare/v0.3.4...HEAD
+[0.3.4]: https://github.com/graelo/podfeed/compare/v0.3.3...v0.3.4
 [0.3.3]: https://github.com/graelo/podfeed/compare/v0.3.2...v0.3.3
 [0.3.2]: https://github.com/graelo/podfeed/compare/v0.3.1...v0.3.2
 [0.3.1]: https://github.com/graelo/podfeed/compare/v0.3.0...v0.3.1
