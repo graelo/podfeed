@@ -40,7 +40,7 @@ impl InfoFile {
 pub async fn available_channel<P: AsRef<Path>>(dirpath: P) -> Result<InfoFile> {
     let mut files: Vec<InfoFile> = vec![];
 
-    let pattern = r#"NA--([a-zA-Z0-9-_]{11,34})--.*\.info\.json"#;
+    let pattern = r#"^NA--([a-zA-Z0-9-_]{11,34}?)--.+\.info\.json$"#;
     // let pattern = r#"[^-]+--([a-zA-Z0-9-_]{34})--.*\.info\.json"#;
     let matcher = Regex::new(pattern).unwrap();
 
@@ -48,7 +48,10 @@ pub async fn available_channel<P: AsRef<Path>>(dirpath: P) -> Result<InfoFile> {
     while let Some(entry) = entries.next().await {
         let entry = entry?;
         let path = entry.path();
-        if let Some(captures) = matcher.captures(&path.to_string_lossy()) {
+        let Some(filename) = path.file_name() else {
+            continue;
+        };
+        if let Some(captures) = matcher.captures(&filename.to_string_lossy()) {
             let youtube_id = &captures[1];
             let channel = InfoFile {
                 youtube_id: youtube_id.into(),
@@ -157,7 +160,7 @@ mod tests {
 
     #[test]
     fn channel_filename_regex_matches_valid_names() {
-        let pattern = r#"NA--([a-zA-Z0-9-_]{11,34})--.*\.info\.json"#;
+        let pattern = r#"^NA--([a-zA-Z0-9-_]{11,34}?)--.+\.info\.json$"#;
         let matcher = Regex::new(pattern).unwrap();
 
         let valid = "NA--PLabcdefghij1234567890--My_Playlist--something.info.json";
@@ -168,7 +171,7 @@ mod tests {
 
     #[test]
     fn channel_filename_regex_rejects_non_channel() {
-        let pattern = r#"NA--([a-zA-Z0-9-_]{11,34})--.*\.info\.json"#;
+        let pattern = r#"^NA--([a-zA-Z0-9-_]{11,34}?)--.+\.info\.json$"#;
         let matcher = Regex::new(pattern).unwrap();
 
         // Episode file (date prefix, not "NA")
@@ -178,6 +181,38 @@ mod tests {
         // ID too short (less than 11 chars)
         let short_id = "NA--abc--Title.info.json";
         assert!(matcher.captures(short_id).is_none());
+    }
+
+    #[test]
+    fn available_channel_finds_short_playlist_id() {
+        let directory = tempfile::tempdir().unwrap();
+        let filename = "NA--PLtest-123456--Example_Playlist--NA.info.json";
+        let filepath = directory.path().join(filename);
+        std::fs::write(&filepath, "{}").unwrap();
+
+        let channel = smol::block_on(available_channel(directory.path())).unwrap();
+
+        assert_eq!(channel.youtube_id, "PLtest-123456");
+        assert_eq!(channel.filepath, filepath);
+    }
+
+    #[test]
+    fn available_channel_rejects_missing_and_multiple_files() {
+        let directory = tempfile::tempdir().unwrap();
+        let missing = smol::block_on(available_channel(directory.path())).unwrap_err();
+        assert!(matches!(missing, Error::MissingChannelInfoFile(path) if path == directory.path()));
+
+        for filename in [
+            "NA--PLabcdefghijk--First.info.json",
+            "NA--PLmnopqrstuvw--Second.info.json",
+        ] {
+            std::fs::write(directory.path().join(filename), "{}").unwrap();
+        }
+
+        let multiple = smol::block_on(available_channel(directory.path())).unwrap_err();
+        assert!(
+            matches!(multiple, Error::MultipleChannelInfoFiles(path) if path == directory.path())
+        );
     }
 
     #[test]
