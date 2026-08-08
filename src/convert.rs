@@ -339,6 +339,40 @@ mod tests {
     }
 
     #[test]
+    fn resize_image_to_fill_produces_exact_square_for_landscape() {
+        // A 1920×1080 source used to yield a 1399×1400 image (off-by-one) because
+        // the aspect-ratio-preserving resize rounded the width down to 1399 and
+        // only the height was padded. Apple Podcasts rejects such non-square
+        // episode artwork, so the output must be an exact square.
+        let tmp = tempfile::TempDir::new().unwrap();
+        let src = tmp.path().join("thumb.png");
+        image::RgbImage::from_pixel(1920, 1080, image::Rgb([10, 20, 30]))
+            .save(&src)
+            .unwrap();
+        let out = tmp.path().join("thumb-1400x1400.png");
+
+        resize_image_to_fill(&src, &out, 1400).unwrap();
+
+        let saved = image::open(&out).unwrap();
+        assert_eq!(saved.dimensions(), (1400, 1400));
+    }
+
+    #[test]
+    fn resize_image_to_fill_produces_exact_square_for_portrait() {
+        let tmp = tempfile::TempDir::new().unwrap();
+        let src = tmp.path().join("thumb.png");
+        image::RgbImage::from_pixel(1080, 1920, image::Rgb([10, 20, 30]))
+            .save(&src)
+            .unwrap();
+        let out = tmp.path().join("thumb-1400x1400.png");
+
+        resize_image_to_fill(&src, &out, 1400).unwrap();
+
+        let saved = image::open(&out).unwrap();
+        assert_eq!(saved.dimensions(), (1400, 1400));
+    }
+
+    #[test]
     fn convert_episode_builds_rss_episode() {
         // Create a minimal 2x2 image on disk for the resize step.
         let tmp = tempfile::TempDir::new().unwrap();
