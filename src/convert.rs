@@ -234,6 +234,14 @@ fn pad_image(
 
 /// Resize an image to fill a square of `target_size` pixels.
 ///
+/// The image is first scaled (aspect ratio preserved) to fit within a
+/// `target_size × target_size` box, then padded symmetrically with black bars
+/// so the output is always an exact `target_size × target_size` square.
+///
+/// This guarantees the square dimensions required by podcast clients such as
+/// Apple Podcasts, which reject episode artwork that is not exactly square
+/// (e.g. 1399×1400) and falls back to the show cover instead.
+///
 /// This function saves the resized image to `path-1400x1400.png` if the `target_size` is 1400.
 ///
 #[must_use = "Use the return value of this function"]
@@ -243,28 +251,25 @@ fn resize_image_to_fill<P: AsRef<Path>>(
     target_size: u32,
 ) -> Result<()> {
     let img = image::open(image_filepath)?;
-    let (a, b) = img.dimensions();
     let t = target_size;
 
-    let (na, nb, p_left, p_right, p_top, p_bot) = if a > b {
-        let pb = t - t * b / a;
-        let p_top = pb / 2;
-        let p_bot = pb - p_top;
-        (t, t * b / a, 0, 0, p_top, p_bot)
-    } else {
-        let pa = t - t * a / b;
-        let p_left = pa / 2;
-        let p_right = pa - p_left;
-        (t * a / b, t, p_left, p_right, 0, 0)
-    };
+    // Resize preserving the aspect ratio so the image fits inside a t×t box.
+    // The aspect-ratio-preserving `resize` may round the smaller axis down by
+    // one pixel, so the result is not guaranteed to be t wide/t tall.
+    let resized = img.resize(t, t, imageops::FilterType::CatmullRom);
+    let (w, h) = resized.dimensions();
 
-    let new_img = img.resize(na, nb, imageops::FilterType::CatmullRom);
+    // Pad both axes symmetrically to reach an exact t×t square. Deriving the
+    // padding from the actual resized dimensions (rather than from a
+    // precomputed target box) makes the square guarantee independent of how
+    // `resize` rounds each axis.
     let black = image::Rgb::from([0, 0, 0]);
-    let new_img = pad_image(&new_img, p_left, p_right, p_top, p_bot, black);
+    let p_left = (t - w) / 2;
+    let p_right = (t - w) - p_left;
+    let p_top = (t - h) / 2;
+    let p_bot = (t - h) - p_top;
 
-    // let (fa, fb) = (new_img.get_width(), new_img.get_height());
-    // let path = image_filepath.as_ref().to_string_lossy();
-    // println!("dims: {a}x{b} -> {na}, {nb}, {p_left}, {p_right}, {p_top}, {p_bot} -> {fa}x{fb} - {path}");
+    let new_img = pad_image(&resized, p_left, p_right, p_top, p_bot, black);
 
     new_img.save(resized_image_filepath)?;
 
@@ -331,6 +336,40 @@ mod tests {
         let padded = pad_image(&img, 10, 10, 20, 20, image::Rgb([0, 0, 0]));
         assert_eq!(padded.width(), 120);
         assert_eq!(padded.height(), 100);
+    }
+
+    #[test]
+    fn resize_image_to_fill_produces_exact_square_for_landscape() {
+        // A 1920×1080 source used to yield a 1399×1400 image (off-by-one) because
+        // the aspect-ratio-preserving resize rounded the width down to 1399 and
+        // only the height was padded. Apple Podcasts rejects such non-square
+        // episode artwork, so the output must be an exact square.
+        let tmp = tempfile::TempDir::new().unwrap();
+        let src = tmp.path().join("thumb.png");
+        image::RgbImage::from_pixel(1920, 1080, image::Rgb([10, 20, 30]))
+            .save(&src)
+            .unwrap();
+        let out = tmp.path().join("thumb-1400x1400.png");
+
+        resize_image_to_fill(&src, &out, 1400).unwrap();
+
+        let saved = image::open(&out).unwrap();
+        assert_eq!(saved.dimensions(), (1400, 1400));
+    }
+
+    #[test]
+    fn resize_image_to_fill_produces_exact_square_for_portrait() {
+        let tmp = tempfile::TempDir::new().unwrap();
+        let src = tmp.path().join("thumb.png");
+        image::RgbImage::from_pixel(1080, 1920, image::Rgb([10, 20, 30]))
+            .save(&src)
+            .unwrap();
+        let out = tmp.path().join("thumb-1400x1400.png");
+
+        resize_image_to_fill(&src, &out, 1400).unwrap();
+
+        let saved = image::open(&out).unwrap();
+        assert_eq!(saved.dimensions(), (1400, 1400));
     }
 
     #[test]
