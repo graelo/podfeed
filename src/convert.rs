@@ -276,6 +276,19 @@ mod tests {
     use super::*;
 
     #[test]
+    fn available_directories_skips_cache_and_files() {
+        let directory = tempfile::tempdir().unwrap();
+        std::fs::create_dir(directory.path().join("channel")).unwrap();
+        std::fs::create_dir(directory.path().join("Cache")).unwrap();
+        std::fs::write(directory.path().join("README"), "not a channel").unwrap();
+
+        let mut directories = smol::block_on(available_directories(directory.path())).unwrap();
+        directories.sort();
+
+        assert_eq!(directories, vec![directory.path().join("channel")]);
+    }
+
+    #[test]
     fn replace_base_substitutes_directory_with_url() {
         let result = replace_base(
             Path::new("/data/podcasts"),
@@ -362,15 +375,140 @@ mod tests {
     }
 
     #[test]
-    fn resize_image_to_fill_creates_square_output() {
+    fn process_builds_feed_and_orders_episodes_by_playlist_index() {
+        let tmp = tempfile::TempDir::new().unwrap();
+        let channel_dir = tmp.path().join("channel");
+        std::fs::create_dir(&channel_dir).unwrap();
+
+        let channel_stem = "NA--PLtest-123456--Example_Playlist--NA";
+        std::fs::write(
+            channel_dir.join(format!("{channel_stem}.info.json")),
+            r#"{
+                "modified_date": "20230101",
+                "title": "Example Channel",
+                "description": "Channel description",
+                "webpage_url": "https://youtube.com/playlist?list=PLtest-123456",
+                "channel": "Author"
+            }"#,
+        )
+        .unwrap();
+        image::RgbImage::from_pixel(2, 2, image::Rgb([0, 0, 0]))
+            .save(channel_dir.join(format!("{channel_stem}.jpg")))
+            .unwrap();
+
+        for (date, id, title, index) in [
+            ("20230102", "aaaaaaaaaaa", "Later", 1),
+            ("20230101", "bbbbbbbbbbb", "Earlier", 0),
+        ] {
+            let stem = format!("{date}--{id}--{title}");
+            std::fs::write(
+                channel_dir.join(format!("{stem}.info.json")),
+                format!(
+                    r#"{{
+                        "id": "{id}",
+                        "upload_date": "{date}",
+                        "playlist_index": {index},
+                        "title": "{title}",
+                        "webpage_url": "https://youtube.com/watch?v={id}",
+                        "description": "Episode description",
+                        "channel": "Author",
+                        "duration": 60
+                    }}"#
+                ),
+            )
+            .unwrap();
+            std::fs::write(channel_dir.join(format!("{stem}.mp4")), [0_u8; 3]).unwrap();
+            image::RgbImage::from_pixel(2, 2, image::Rgb([0, 0, 0]))
+                .save(channel_dir.join(format!("{stem}.png")))
+                .unwrap();
+        }
+
+        let feed = smol::block_on(process(
+            tmp.path(),
+            &channel_dir,
+            Path::new("https://cdn.example.com"),
+        ))
+        .unwrap();
+
+        assert!(feed.starts_with(r#"<?xml version="1.0" encoding="UTF-8"?>"#));
+        assert!(feed.contains("<title>Example Channel</title>"));
+        assert!(feed.contains("https://cdn.example.com/channel/"));
+        let earlier = feed.find("<guid>bbbbbbbbbbb</guid>").unwrap();
+        let later = feed.find("<guid>aaaaaaaaaaa</guid>").unwrap();
+        assert!(earlier < later);
+    }
+
+    #[test]
+    fn convert_channel_builds_rss_channel_and_resizes_image() {
+        let tmp = tempfile::TempDir::new().unwrap();
+        let image_filepath = tmp.path().join("channel.png");
+        image::RgbImage::from_pixel(100, 50, image::Rgb([128, 128, 128]))
+            .save(&image_filepath)
+            .unwrap();
+
+        let source = info::channel::Info {
+            upload_date: "20230101".into(),
+            title: "Channel title".into(),
+            description: "Channel description".into(),
+            link: "https://youtube.com/playlist?list=PLtest-12345".into(),
+            author: "Author".into(),
+        };
+        let channel = convert_channel(
+            tmp.path(),
+            Path::new("https://cdn.example.com"),
+            &source,
+            &image_filepath,
+            Vec::new(),
+        )
+        .unwrap();
+
+        assert_eq!(channel.title, "Channel title");
+        assert_eq!(channel.description, "Channel description");
+        assert_eq!(
+            channel.link,
+            "https://youtube.com/playlist?list=PLtest-12345"
+        );
+        assert_eq!(channel.author, "Author");
+        assert_eq!(channel.language, "en");
+        assert_eq!(channel.category, "Technology & Science");
+        assert_eq!(channel.generator, "ytdlp");
+        assert_eq!(channel.explicit_content, "false");
+        assert_eq!(channel.channel_type, "Serial");
+        assert_eq!(channel.pub_date, "Sun, 01 Jan 2023 09:10:11 +0000");
+        assert!(!channel.last_build_date.is_empty());
+        assert_eq!(
+            channel.image.image_url,
+            "https://cdn.example.com/channel-1400x1400.png"
+        );
+
+        let resized = image::open(tmp.path().join("channel-1400x1400.png")).unwrap();
+        assert_eq!(resized.dimensions(), (1400, 1400));
+    }
+
+    #[test]
+    fn resize_image_to_fill_creates_square_output_for_landscape_image() {
         let tmp = tempfile::TempDir::new().unwrap();
         let src = tmp.path().join("wide.png");
-        // 200x100 landscape image
         image::RgbImage::from_pixel(200, 100, image::Rgb([128, 128, 128]))
             .save(&src)
             .unwrap();
 
         let dst = tmp.path().join("wide-100x100.png");
+        resize_image_to_fill(&src, &dst, 100).unwrap();
+
+        let resized = image::open(&dst).unwrap();
+        assert_eq!(resized.dimensions(), (100, 100));
+    }
+
+    #[test]
+    fn resize_image_to_fill_creates_square_output_for_portrait_image() {
+        let tmp = tempfile::TempDir::new().unwrap();
+        let src = tmp.path().join("portrait.png");
+        image::RgbImage::from_pixel(100, 200, image::Rgb([128, 128, 128]))
+            .save(&src)
+            .unwrap();
+
+        let dst = tmp.path().join("portrait-100x100.png");
         resize_image_to_fill(&src, &dst, 100).unwrap();
 
         let resized = image::open(&dst).unwrap();
