@@ -193,6 +193,59 @@ mod tests {
     }
 
     #[test]
+    fn available_episodes_extracts_and_sorts_files() {
+        let directory = tempfile::tempdir().unwrap();
+        for filename in [
+            "20230519--dQw4w9WgXcQ--Later.info.json",
+            "20220101--abcdefghijk--Earlier.info.json",
+            "NA--PLabcdefghijk--Channel.info.json",
+            "not-an-info-file.txt",
+        ] {
+            std::fs::write(directory.path().join(filename), "{}").unwrap();
+        }
+
+        let episodes = smol::block_on(available_episodes(directory.path())).unwrap();
+
+        assert_eq!(episodes.len(), 2);
+        assert_eq!(
+            episodes[0].pub_date,
+            NaiveDate::from_ymd_opt(2022, 1, 1).unwrap()
+        );
+        assert_eq!(episodes[0].youtube_id, "abcdefghijk");
+        assert_eq!(
+            episodes[1].pub_date,
+            NaiveDate::from_ymd_opt(2023, 5, 19).unwrap()
+        );
+        assert_eq!(episodes[1].youtube_id, "dQw4w9WgXcQ");
+    }
+
+    #[test]
+    fn info_file_parse_returns_media_paths_and_size() {
+        let directory = tempfile::tempdir().unwrap();
+        let info_filepath = directory
+            .path()
+            .join("20230519--dQw4w9WgXcQ--Episode.info.json");
+        let video_filepath = directory.path().join("20230519--dQw4w9WgXcQ--Episode.mp4");
+        std::fs::write(&info_filepath, sample_json()).unwrap();
+        std::fs::write(&video_filepath, [0_u8; 7]).unwrap();
+
+        let info_file = InfoFile {
+            pub_date: NaiveDate::from_ymd_opt(2023, 5, 19).unwrap(),
+            youtube_id: "dQw4w9WgXcQ".into(),
+            filepath: info_filepath.clone(),
+        };
+        let (_, enclosure, image_filepath) = smol::block_on(info_file.parse()).unwrap();
+
+        assert_eq!(enclosure.video_filepath, video_filepath);
+        assert_eq!(enclosure.video_filelength, 7);
+        assert_eq!(enclosure.video_filetype, "mp4");
+        assert_eq!(
+            image_filepath,
+            directory.path().join("20230519--dQw4w9WgXcQ--Episode.png")
+        );
+    }
+
+    #[test]
     fn episode_date_parsing_from_filename() {
         let date = NaiveDate::parse_from_str("20230519", "%Y%m%d").unwrap();
         assert_eq!(date.to_string(), "2023-05-19");
