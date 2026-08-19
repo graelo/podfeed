@@ -8,11 +8,24 @@ and this project adheres to
 
 ## [Unreleased]
 
+### Added
+
+- Add Makefile targets for local verification, dependency and CI security
+  audits, Markdown and manpage linting, auto-fixes, and coverage reports
+- Add a `podfeed(1)` manpage and repository guidance for coding agents
+
+### Changed
+
+- Use `README.md` as the crate documentation instead of generating it from
+  crate-level rustdocs
+
 ## [0.3.5] - 2026-08-08
 
 ### Fixed
 
-- Produce exact 1400×1400 episode artwork so Apple Podcasts displays per-episode screenshots instead of falling back to the show cover (the previous 1399×1400 output was rejected as non-square)
+- Produce exact 1400×1400 episode artwork so Apple Podcasts displays
+  per-episode screenshots instead of falling back to the show cover (the
+  previous 1399×1400 output was rejected as non-square)
 
 ## [0.3.4] - 2026-08-08
 

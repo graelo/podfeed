@@ -1,0 +1,89 @@
+.TH PODFEED 1 "2026-08-08" "podfeed 0.3.5" "User Commands"
+.SH NAME
+podfeed \- generate podcast RSS feeds from yt-dlp metadata
+.SH SYNOPSIS
+.B podfeed generate
+.BI \-d " PATH"
+.BI \-\-base-url " URL"
+.br
+.B podfeed generate-completion
+.I SHELL
+.SH DESCRIPTION
+.B podfeed
+creates podcast RSS feeds from media files and
+.B .info.json
+metadata files created by
+.BR yt-dlp (1).
+Each channel directory gets an adjacent XML feed.
+.B podfeed
+creates square 1400×1400 channel and episode artwork when needed.
+.SH COMMANDS
+.TP
+.B generate
+Generate feeds for all channel directories below the data directory.
+.TP
+.B generate-completion
+Write a shell completion script to standard output.
+.SH OPTIONS
+.SS generate
+.TP
+.BR \-d ", " \-\-data-dir " " \fIPATH\fR
+Root directory containing channel directories created by yt-dlp.
+May also be supplied with the
+.B DATADIR
+environment variable.
+.TP
+.BI \-\-base-url " URL"
+Public URL corresponding to the data directory. It is used for media and
+artwork URLs in generated feeds.
+May also be supplied with the
+.B BASEURL
+environment variable.
+.SS generate-completion
+.TP
+.I SHELL
+Target shell. One of
+.BR bash ,
+.BR elvish ,
+.BR fish ,
+.BR powershell ,
+or
+.BR zsh .
+.SH EXAMPLES
+Generate feeds for a yt-dlp data directory:
+.PP
+.RS
+.nf
+podfeed generate \
+  --data-dir ./data \
+  --base-url https://podcasts.example.com
+.fi
+.RE
+.PP
+Generate a Bash completion script:
+.PP
+.RS
+.nf
+podfeed generate-completion bash > podfeed.bash
+.fi
+.RE
+.SH ENVIRONMENT
+.TP
+.B DATADIR
+Default value for
+.BR \-\-data-dir .
+.TP
+.B BASEURL
+Default value for
+.BR \-\-base-url .
+.SH EXIT STATUS
+.TP
+.B 0
+Feeds or a completion script were generated successfully.
+.TP
+.B non-zero
+An input, image-processing, or output error occurred.
+.SH SEE ALSO
+.BR yt-dlp (1)
+.SH AUTHORS
+graelo <https://github.com/graelo/podfeed>

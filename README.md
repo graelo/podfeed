@@ -6,20 +6,34 @@
 [![rust 2024 edition](https://img.shields.io/badge/edition-2024-blue.svg)](https://doc.rust-lang.org/edition-guide/rust-2024/index.html)
 [![build status](https://github.com/graelo/podfeed/actions/workflows/ci-essentials.yml/badge.svg)](https://github.com/graelo/podfeed/actions)
 
-<!-- cargo-sync-readme start -->
+## Name
 
-Generates podcast RSS feeds from media and `.info.json` files created by
-yt-dlp.
+**podfeed** — generate podcast RSS feeds from yt-dlp metadata
 
-Version requirement: _rustc 1.95+_
+## Synopsis
 
-## Features
+```sh
+podfeed generate --data-dir PATH --base-url URL
+podfeed generate-completion SHELL
+```
 
-- Generate RSS feeds for podcast players
-- Resize channel and episode artwork
-- Generate shell completion scripts
+## Description
 
-## Getting started
+`podfeed` generates podcast RSS feeds from media files and `.info.json` files
+created by [yt-dlp]. It finds each channel directory below `--data-dir`, writes
+an XML feed adjacent to that directory, and creates square 1400×1400 artwork
+for channels and episodes when needed.
+
+`--base-url` is the public URL corresponding to `--data-dir`; it is used for
+media and artwork URLs in the generated feeds.
+
+## Getting Started
+
+Install the latest release with Cargo:
+
+```sh
+cargo install podfeed
+```
 
 Generate feeds for a yt-dlp data directory:
 
@@ -29,11 +43,31 @@ podfeed generate \
   --base-url https://podcasts.example.com
 ```
 
-Generate shell completions with `podfeed generate-completion <shell>`.
+Set `DATADIR` and `BASEURL` instead of passing the corresponding options:
+
+```sh
+DATADIR=./data BASEURL=https://podcasts.example.com podfeed generate
+```
+
+## Shell Completions
+
+Generate a completion script for Bash, Elvish, Fish, PowerShell, or Zsh. For
+example, install Bash completions with:
+
+```sh
+podfeed generate-completion bash >"$(brew --prefix)/etc/bash_completion.d/podfeed"
+```
+
+## Development
+
+The [`Makefile`](Makefile) is the canonical definition of local verification
+tasks. Run `make help` to list them, `make check` before pushing, and
+`make check-all` before opening a pull request. `make man` validates
+[`man/podfeed.1`](man/podfeed.1), which documents the command-line interface.
 
 ## Caveats
 
-- This is an alpha version
+- This is an alpha version.
 
 ## License
 
@@ -53,4 +87,4 @@ submitted for inclusion in the work by you, as defined in the Apache-2.0
 license, shall be dual licensed as above, without any additional terms or
 conditions.
 
-<!-- cargo-sync-readme end -->
+[yt-dlp]: https://github.com/yt-dlp/yt-dlp
