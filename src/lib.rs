@@ -1,6 +1,5 @@
 #![warn(missing_docs)]
-
-//! Convert `*.info.json` files into a single RSS feed.
+#![doc = include_str!("../README.md")]
 
 pub mod config;
 pub mod convert;

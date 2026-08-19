@@ -1,0 +1,20 @@
+# See the lints at https://github.com/rvben/rumdl/tree/main/docs
+[global]
+flavor = "mkdocs"
+disable = [
+  "MD007", # Prefer the flavor over MD007.
+  "MD046", # Allow indented and fenced code blocks.
+]
+
+[MD013]
+line-length = 80
+code-blocks = false
+tables = false
+reflow = true
+
+[MD033]
+allowed-elements = ["kbd"]
+
+[MD060]
+enabled = true
+style = "aligned"

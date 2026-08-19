@@ -5,7 +5,7 @@ use std::path::PathBuf;
 use clap::{Parser, Subcommand, ValueHint};
 use clap_complete::Shell;
 
-/// Save or restore Tmux sessions.
+/// Parse podfeed command-line arguments.
 #[derive(Debug, Parser)]
 #[clap(author, about, version)]
 #[clap(propagate_version = true)]
@@ -15,26 +15,16 @@ pub struct Config {
     pub command: Command,
 }
 
-/// Indicate whether to save (resp. restore) the Tmux sessions to (resp. from) a backup.
+/// Select a podfeed command.
 #[derive(Debug, Subcommand)]
 pub enum Command {
-    /// Save the Tmux sessions to a new backup file.
-    ///
-    /// Sessions, windows, and panes geometry + content are saved in an archive format inside the
-    /// backup folder. In that folder, the backup name is expected to be similar to
-    /// `backup-20220531T123456.tar.zst`.
-    ///
-    /// If you run this command via a Tmux keybinding, use the `--to-tmux` flag in order to send a
-    /// one-line report to the Tmux status bar. If you run this command from the terminal, ignore
-    /// this flag in order to print the one-line report in the terminal.
+    /// Generate RSS feeds from yt-dlp data directories.
     Generate {
-        /// Data dirpath.
-        ///
-        /// Path to folders created by the downloader.
+        /// Root directory containing channel directories created by yt-dlp.
         #[arg(short = 'd', long = "data-dir", value_hint = ValueHint::DirPath, env = "DATADIR")]
         data_dir: PathBuf,
 
-        /// Base URL.
+        /// Public URL corresponding to the data directory.
         #[arg(long = "base-url", env = "BASEURL")]
         base_url: String,
     },

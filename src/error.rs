@@ -2,10 +2,7 @@
 
 use std::{io, path::PathBuf};
 
-/// Describes all errors from this crate.
-///
-/// - errors during backup operations.
-/// - errors reported by tmux
+/// Describes errors from feed generation.
 #[derive(thiserror::Error, Debug)]
 pub enum Error {
     /// Unsupported archive version.
