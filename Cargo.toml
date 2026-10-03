@@ -7,7 +7,6 @@ description = "A podcast feed-generator."
 readme = "README.md"
 
 documentation = "https://docs.rs/podfeed"
-homepage = "https://github.com/graelo/podfeed"
 repository = "https://github.com/graelo/podfeed"
 license = "MIT OR Apache-2.0"
 

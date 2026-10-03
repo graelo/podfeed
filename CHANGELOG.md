@@ -24,6 +24,11 @@ and this project adheres to
   `zizmor.yml` suppression config, and use the `$` self-repository syntax for
   reusable workflow calls
 
+### Removed
+
+- Remove the redundant `homepage` field from `Cargo.toml` (it duplicated the
+  `repository` URL, which recent Cargo warns about)
+
 ## [0.3.5] - 2026-08-08
 
 ### Fixed
