@@ -18,6 +18,11 @@ and this project adheres to
 
 - Use `README.md` as the crate documentation instead of generating it from
   crate-level rustdocs
+- Switch CI workflows from `dtolnay/rust-toolchain` to
+  `actions-rust-lang/setup-rust-toolchain` (v2), disable its built-in caching
+  in favor of the existing `actions/cache` step, drop the now-unneeded
+  `zizmor.yml` suppression config, and use the `$` self-repository syntax for
+  reusable workflow calls
 
 ## [0.3.5] - 2026-08-08
 
