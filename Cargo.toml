@@ -41,11 +41,13 @@ serde_json = "1"
 smol = "2"
 #
 # ser/deser
-tempfile = "3"
-#
 thiserror = "2"
 
 [build-dependencies]
+
+[dev-dependencies]
+# Test-only dependency (fixes the cargo::unused_dependencies lint on beta).
+tempfile = "3"
 
 [profile.release]
 # Enable link-time optimization (LTO). It’s a kind of whole-program or

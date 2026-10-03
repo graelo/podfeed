@@ -23,6 +23,9 @@ and this project adheres to
   in favor of the existing `actions/cache` step, drop the now-unneeded
   `zizmor.yml` suppression config, and use the `$` self-repository syntax for
   reusable workflow calls
+- Move the test-only `tempfile` dependency to `[dev-dependencies]`, fixing
+  the build on Rust beta where the new `cargo::unused_dependencies` lint
+  denies it as unused in non-test builds
 
 ### Removed
 
