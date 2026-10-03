@@ -114,7 +114,7 @@ jobs:
     if: needs.changes.outputs.cargo_lock == 'true'
     permissions:
       contents: read
-    uses: ./.github/workflows/_cargo-audit.yml
+    uses: $/.github/workflows/_cargo-audit.yml
 
   ci-security:
     needs: changes
