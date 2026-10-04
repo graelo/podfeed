@@ -10,6 +10,8 @@ and this project adheres to
 
 ### Added
 
+- Add a `.cargo/config.toml` that denies cargo build warnings (e.g.
+  `cargo::unused_dependencies`) locally, matching the CI configuration
 - Add Makefile targets for local verification, dependency and CI security
   audits, Markdown and manpage linting, auto-fixes, and coverage reports
 - Add a `podfeed(1)` manpage and repository guidance for coding agents

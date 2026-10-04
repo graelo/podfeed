@@ -43,8 +43,6 @@ smol = "2"
 # ser/deser
 thiserror = "2"
 
-[build-dependencies]
-
 [dev-dependencies]
 # Test-only dependency (fixes the cargo::unused_dependencies lint on beta).
 tempfile = "3"
