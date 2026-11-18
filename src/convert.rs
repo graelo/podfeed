@@ -9,6 +9,9 @@ use image::{DynamicImage, GenericImageView, imageops};
 use crate::{Result, info, rss};
 
 const TARGET_SIZE: u32 = 1400;
+const RSS_DATE_FORMAT: &[time::format_description::FormatItem<'static>] = time::macros::format_description!(
+    "[weekday repr:short], [day] [month repr:short] [year] [hour]:[minute]:[second] [offset_hour sign:mandatory][offset_minute]"
+);
 
 /// List all playlist directories.
 pub async fn available_directories<P: AsRef<Path>>(data_dirpath: P) -> Result<Vec<PathBuf>> {
@@ -129,11 +132,12 @@ pub fn convert_channel<P: AsRef<Path>>(
         },
         author: source.author.clone(),
         language: source.language().to_string(),
-        last_build_date: format!(
-            "{}",
-            source.last_build_date().format("%a, %d %b %Y %H:%M:%S %z")
-        ),
-        pub_date: format!("{}", source.pub_date().format("%a, %d %b %Y %H:%M:%S %z")),
+        last_build_date: source.last_build_date().format(RSS_DATE_FORMAT).unwrap(),
+        pub_date: source
+            .pub_date()
+            .format(RSS_DATE_FORMAT)
+            .unwrap()
+            .to_string(),
         category: source.category().to_string(),
         generator: source.generator().to_string(),
         explicit_content: source.explicit_content().to_string(),
@@ -168,7 +172,8 @@ pub fn convert_episode<P: AsRef<Path>>(
         guid: source.guid.clone(),
         pub_date: source
             .pub_date()
-            .format("%a, %d %b %Y %H:%M:%S %z")
+            .format(RSS_DATE_FORMAT)
+            .unwrap()
             .to_string(),
         title: source.title.clone(),
         link: source.link.clone(),
