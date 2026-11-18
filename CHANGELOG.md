@@ -18,6 +18,7 @@ and this project adheres to
 
 ### Changed
 
+- Replace the unmaintained `chrono` dependency with `time`
 - Use `README.md` as the crate documentation instead of generating it from
   crate-level rustdocs
 - Switch CI workflows from `dtolnay/rust-toolchain` to

@@ -2,10 +2,10 @@
 
 use std::path::{Path, PathBuf};
 
-use chrono::{DateTime, Local, NaiveDate, offset::Utc};
 use futures::stream::StreamExt;
 use regex::Regex;
 use serde::Deserialize;
+use time::{Date, OffsetDateTime, Time, macros::format_description};
 
 use crate::{Result, error::Error};
 
@@ -94,12 +94,14 @@ pub struct Info {
 }
 
 impl Info {
-    pub(crate) fn pub_date(&self) -> DateTime<Utc> {
-        let naived_date = NaiveDate::parse_from_str(&self.upload_date, "%Y%m%d")
-            .unwrap()
-            .and_hms_opt(9, 10, 11)
-            .unwrap();
-        DateTime::<Utc>::from_naive_utc_and_offset(naived_date, Utc)
+    pub(crate) fn pub_date(&self) -> OffsetDateTime {
+        Date::parse(
+            &self.upload_date,
+            &format_description!("[year][month][day]"),
+        )
+        .unwrap()
+        .with_time(Time::from_hms(9, 10, 11).unwrap())
+        .assume_utc()
     }
 
     pub(crate) fn language(&self) -> &'static str {
@@ -110,8 +112,8 @@ impl Info {
         "Technology & Science"
     }
 
-    pub(crate) fn last_build_date(&self) -> DateTime<Local> {
-        Local::now()
+    pub(crate) fn last_build_date(&self) -> OffsetDateTime {
+        OffsetDateTime::now_local().unwrap_or_else(|_| OffsetDateTime::now_utc())
     }
 
     pub(crate) fn generator(&self) -> &'static str {
@@ -155,7 +157,11 @@ mod tests {
     fn pub_date_parses_yyyymmdd() {
         let info: Info = serde_json::from_str(sample_json()).unwrap();
         let dt = info.pub_date();
-        assert_eq!(dt.format("%Y-%m-%d").to_string(), "2025-06-01");
+        assert_eq!(
+            dt.format(&format_description!("[year]-[month]-[day]"))
+                .unwrap(),
+            "2025-06-01"
+        );
     }
 
     #[test]

@@ -19,7 +19,7 @@ name = "podfeed"
 path = "src/bin/main.rs"
 
 [dependencies]
-chrono = "0.4.20"
+time = { version = "0.3", features = ["formatting", "local-offset", "macros", "parsing"] }
 clap = { version = "4.0.18", features = ["derive", "env"] }
 clap_complete = "4.0.3"
 # si-scale = "0.2"

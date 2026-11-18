@@ -2,10 +2,10 @@
 
 use std::path::{Path, PathBuf};
 
-use chrono::{DateTime, NaiveDate, offset::Utc};
 use futures::stream::StreamExt;
 use regex::Regex;
 use serde::Deserialize;
+use time::{Date, OffsetDateTime, Time, macros::format_description};
 
 use crate::Result;
 
@@ -13,7 +13,7 @@ use crate::Result;
 #[derive(Debug, Clone)]
 pub struct InfoFile {
     /// Publication date of the episode.
-    pub pub_date: NaiveDate,
+    pub pub_date: Date,
     /// Youtube ID of the episode.
     pub youtube_id: String,
     /// Filepath of the episode .
@@ -65,7 +65,8 @@ pub async fn available_episodes<P: AsRef<Path>>(dirpath: P) -> Result<Vec<InfoFi
         let path = entry.path();
         if let Some(captures) = matcher.captures(&path.to_string_lossy()) {
             let date_str = &captures[1];
-            let pub_date = NaiveDate::parse_from_str(date_str, "%Y%m%d").unwrap();
+            let pub_date =
+                Date::parse(date_str, &format_description!("[year][month][day]")).unwrap();
             let youtube_id = &captures[2];
             let episode = InfoFile {
                 pub_date,
@@ -115,12 +116,14 @@ pub struct Info {
 }
 
 impl Info {
-    pub(crate) fn pub_date(&self) -> DateTime<Utc> {
-        let naived_date = NaiveDate::parse_from_str(&self.upload_date, "%Y%m%d")
-            .unwrap()
-            .and_hms_opt(9, 10, 11)
-            .unwrap();
-        DateTime::<Utc>::from_naive_utc_and_offset(naived_date, Utc)
+    pub(crate) fn pub_date(&self) -> OffsetDateTime {
+        Date::parse(
+            &self.upload_date,
+            &format_description!("[year][month][day]"),
+        )
+        .unwrap()
+        .with_time(Time::from_hms(9, 10, 11).unwrap())
+        .assume_utc()
     }
 }
 
@@ -169,7 +172,11 @@ mod tests {
     fn pub_date_parses_yyyymmdd() {
         let info: Info = serde_json::from_str(sample_json()).unwrap();
         let dt = info.pub_date();
-        assert_eq!(dt.format("%Y-%m-%d").to_string(), "2023-05-19");
+        assert_eq!(
+            dt.format(&format_description!("[year]-[month]-[day]"))
+                .unwrap(),
+            "2023-05-19"
+        );
     }
 
     #[test]
@@ -209,12 +216,12 @@ mod tests {
         assert_eq!(episodes.len(), 2);
         assert_eq!(
             episodes[0].pub_date,
-            NaiveDate::from_ymd_opt(2022, 1, 1).unwrap()
+            Date::from_calendar_date(2022, time::Month::January, 1).unwrap()
         );
         assert_eq!(episodes[0].youtube_id, "abcdefghijk");
         assert_eq!(
             episodes[1].pub_date,
-            NaiveDate::from_ymd_opt(2023, 5, 19).unwrap()
+            Date::from_calendar_date(2023, time::Month::May, 19).unwrap()
         );
         assert_eq!(episodes[1].youtube_id, "dQw4w9WgXcQ");
     }
@@ -230,7 +237,7 @@ mod tests {
         std::fs::write(&video_filepath, [0_u8; 7]).unwrap();
 
         let info_file = InfoFile {
-            pub_date: NaiveDate::from_ymd_opt(2023, 5, 19).unwrap(),
+            pub_date: Date::from_calendar_date(2023, time::Month::May, 19).unwrap(),
             youtube_id: "dQw4w9WgXcQ".into(),
             filepath: info_filepath.clone(),
         };
@@ -247,7 +254,7 @@ mod tests {
 
     #[test]
     fn episode_date_parsing_from_filename() {
-        let date = NaiveDate::parse_from_str("20230519", "%Y%m%d").unwrap();
+        let date = Date::parse("20230519", &format_description!("[year][month][day]")).unwrap();
         assert_eq!(date.to_string(), "2023-05-19");
     }
 }
